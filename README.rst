@@ -75,7 +75,7 @@ See `the official documentation of BigQuery Datasets`_ for details of key names.
 +---------------+-------------+-----------+---------+----------------------------------------------------------+
 | location                                | str     | Location in which the dataset is hosted.                 |
 +---------------+-------------+-----------+---------+----------------------------------------------------------+
-| access_grants                           | map     | Roles granted to entities for this dataset.              |
+| access_grants                           | seq     | Roles granted to entities for this dataset.              |
 +---------------+-------------+-----------+---------+----------------------------------------------------------+
 | access_grants | role                    | str     | Role granted to the entity. One of                       |
 |               |                         |         |                                                          |
