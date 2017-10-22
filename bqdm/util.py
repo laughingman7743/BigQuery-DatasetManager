@@ -24,7 +24,7 @@ def dump_dataset(data):
                      allow_unicode=True, canonical=False)
 
 
-def load_local_datasets(conf_dir):
+def list_local_datasets(conf_dir):
     if not os.path.exists(conf_dir):
         raise RuntimeError('Configuration file directory not found.')
 
@@ -39,40 +39,6 @@ def load_local_datasets(conf_dir):
     return datasets
 
 
-def load_bigquery_datasets(client):
-    datasets = []
-    for dataset in client.list_datasets():
-        click.echo('Load: ' + dataset.path)
-        datasets.append(BigQueryDataset.from_dataset(dataset))
-    click.echo('------------------------------------------------------------------------')
-    click.echo()
-    return datasets
-
-
 def ndiff(source, target):
     return difflib.ndiff(dump_dataset(source).splitlines(),
                          dump_dataset(target).splitlines())
-
-
-def get_add_datasets(source, target):
-    names = set(t.name for t in target) - set(s.name for s in source)
-    results = [t for t in target if t.name in names]
-    return len(results), tuple(results)
-
-
-def get_change_datasets(source, target):
-    _, add_datasets = get_add_datasets(source, target)
-    results = (set(target) - set(add_datasets)) - set(source)
-    return len(results), tuple(results)
-
-
-def get_destroy_datasets(source, target):
-    names = set(s.name for s in source) - set(t.name for t in target)
-    results = [s for s in source if s.name in names]
-    return len(results), tuple(results)
-
-
-def get_intersection_datasets(source, target):
-    names = set(s.name for s in source) & set(t.name for t in target)
-    results = [s for s in source if s.name in names]
-    return len(results), tuple(results)
