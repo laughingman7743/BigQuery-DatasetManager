@@ -13,6 +13,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset2 = BigQueryDataset(
@@ -21,6 +22,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset3 = BigQueryDataset(
@@ -29,6 +31,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'EU',
+            None,
             None
         )
         dataset4 = BigQueryDataset(
@@ -37,6 +40,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             None,
             'EU',
+            None,
             None
         )
         self.assertEqual(dataset1, dataset2)
@@ -71,6 +75,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1]
         )
         dataset_with_access_entry2 = BigQueryDataset(
@@ -79,6 +84,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2]
         )
         dataset_with_access_entry3 = BigQueryDataset(
@@ -87,6 +93,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry3]
         )
         dataset_with_access_entry4 = BigQueryDataset(
@@ -95,6 +102,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1]
         )
         dataset_with_access_entry5 = BigQueryDataset(
@@ -103,6 +111,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1, access_entry3]
         )
         dataset_with_access_entry6 = BigQueryDataset(
@@ -111,6 +120,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry3, access_entry1]
         )
         dataset_with_access_entry7 = BigQueryDataset(
@@ -119,6 +129,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1, access_entry2]
         )
         self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry2)
@@ -136,6 +147,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset_from_dict1 = BigQueryDataset.from_dict({
@@ -144,6 +156,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
+            'labels': None,
             'access_entris': None
         })
         dataset_from_dict2 = BigQueryDataset.from_dict({
@@ -152,6 +165,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': None,
             'location': 'US',
+            'labels': None,
             'access_entries': None
         })
         dataset_from_dict3 = BigQueryDataset.from_dict({
@@ -160,6 +174,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': None,
             'location': 'US',
+            'labels': None,
             'access_entries': None
         })
         self.assertEqual(dataset, dataset_from_dict1)
@@ -188,6 +203,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1]
         )
         dataset_with_access_entry2 = BigQueryDataset(
@@ -196,6 +212,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2]
         )
         dataset_with_access_entry3 = BigQueryDataset(
@@ -204,6 +221,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1, access_entry2]
         )
         dataset_with_access_entry4 = BigQueryDataset(
@@ -212,6 +230,7 @@ class TestModel(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry1, access_entry1]
         )
         dataset_with_access_entry_from_dict1 = BigQueryDataset.from_dict({
@@ -220,6 +239,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
+            'labels': None,
             'access_entries': [
                 {
                     'role': 'OWNER',
@@ -234,6 +254,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
+            'labels': None,
             'access_entries': [
                 {
                     'role': None,
@@ -252,6 +273,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
+            'labels': None,
             'access_entries': [
                 {
                     'role': 'OWNER',
@@ -275,6 +297,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
+            'labels': None,
             'access_entries': [
                 {
                     'role': 'OWNER',

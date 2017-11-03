@@ -9,13 +9,14 @@ from google.cloud.bigquery.dataset import AccessEntry, Dataset
 class BigQueryDataset(object):
 
     def __init__(self, dataset_id, friendly_name, description,
-                 default_table_expiration_ms, location, access_entries):
+                 default_table_expiration_ms, location, labels, access_entries):
         self.dataset_id = dataset_id
         self.friendly_name = friendly_name
         self.description = description
         self.default_table_expiration_ms = default_table_expiration_ms
         self.location = location
-        self.access_entries = access_entries
+        self.labels = labels if labels else None
+        self.access_entries = access_entries if access_entries else None
 
     @staticmethod
     def from_dict(value):
@@ -27,6 +28,7 @@ class BigQueryDataset(object):
                                value.get('description', None),
                                value.get('default_table_expiration_ms', None),
                                value.get('location', None),
+                               value.get('labels', None),
                                access_entries)
 
     @staticmethod
@@ -39,6 +41,7 @@ class BigQueryDataset(object):
                                dataset.description,
                                dataset.default_table_expiration_ms,
                                dataset.location,
+                               dataset.labels,
                                access_entries)
 
     @staticmethod
@@ -52,6 +55,7 @@ class BigQueryDataset(object):
         dataset.description = value.description
         dataset.default_table_expiration_ms = value.default_table_expiration_ms
         dataset.location = value.location
+        dataset.labels = value.labels if value.labels is not None else dict()
         dataset.access_entries = access_entries
         return dataset
 
@@ -65,6 +69,7 @@ class BigQueryDataset(object):
                 ('description', value.description),
                 ('default_table_expiration_ms', value.default_table_expiration_ms),
                 ('location', value.location),
+                ('labels', value.labels),
                 ('access_entries', value.access_entries),
             )
         )
@@ -75,6 +80,8 @@ class BigQueryDataset(object):
                 self.description,
                 self.default_table_expiration_ms,
                 self.location,
+                frozenset(sorted(self.labels.items())) if self.labels is not None
+                else self.labels,
                 frozenset(self.access_entries) if self.access_entries is not None
                 else self.access_entries,)
 

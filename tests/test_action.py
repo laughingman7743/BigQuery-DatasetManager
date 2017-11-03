@@ -14,6 +14,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset2 = BigQueryDataset(
@@ -22,6 +23,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
 
@@ -50,6 +52,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset1_2 = BigQueryDataset(
@@ -58,6 +61,7 @@ class TestAction(unittest.TestCase):
             'bar',
             None,
             'UK',
+            None,
             None
         )
         dataset2_1 = BigQueryDataset(
@@ -66,6 +70,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset2_2 = BigQueryDataset(
@@ -74,6 +79,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [
                 BigQueryAccessEntry(
                     None,
@@ -124,6 +130,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset1_2 = BigQueryDataset(
@@ -132,6 +139,7 @@ class TestAction(unittest.TestCase):
             'bar',
             None,
             'UK',
+            None,
             None
         )
         dataset2_1 = BigQueryDataset(
@@ -140,6 +148,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset2_2 = BigQueryDataset(
@@ -148,6 +157,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [
                 BigQueryAccessEntry(
                     None,
@@ -198,6 +208,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset1_2 = BigQueryDataset(
@@ -206,6 +217,7 @@ class TestAction(unittest.TestCase):
             'bar',
             None,
             'UK',
+            None,
             None
         )
         dataset2_1 = BigQueryDataset(
@@ -214,6 +226,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         dataset2_2 = BigQueryDataset(
@@ -222,6 +235,7 @@ class TestAction(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [
                 BigQueryAccessEntry(
                     None,

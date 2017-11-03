@@ -4,7 +4,6 @@ import codecs
 import difflib
 import glob
 import os
-from collections import OrderedDict
 
 import click
 import yaml
@@ -13,10 +12,6 @@ from bqdm.model import BigQueryDataset
 
 def str_representer(_, data):
     return yaml.ScalarNode('tag:yaml.org,2002:str', data)
-
-
-def ordered_dict_constructor(loader, data):
-    return OrderedDict(loader.construct_pairs(data))
 
 
 def dump_dataset(data):

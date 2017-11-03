@@ -14,6 +14,7 @@ class TestUtil(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         actual_dump_data1 = dump_dataset(dataset1)
@@ -22,6 +23,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries: null
 """
         self.assertEqual(actual_dump_data1, expected_dump_data1)
@@ -37,6 +39,7 @@ access_entries: null
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2]
         )
         actual_dump_data2 = dump_dataset(dataset2)
@@ -45,6 +48,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: OWNER
     entity_type: specialGroup
@@ -67,6 +71,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry3]
         )
         actual_dump_data3 = dump_dataset(dataset3)
@@ -75,6 +80,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: null
     entity_type: view
@@ -91,6 +97,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2, access_entry3]
         )
         actual_dump_data4 = dump_dataset(dataset4)
@@ -99,6 +106,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: OWNER
     entity_type: specialGroup
