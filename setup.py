@@ -30,7 +30,7 @@ setup(
         'future',
         'click>=6.0',
         'PyYAML>=3.12',
-        'google-cloud-bigquery>=0.27.0',
+        'google-cloud-bigquery==0.28.0',
     ],
     tests_require=[
         'pytest',

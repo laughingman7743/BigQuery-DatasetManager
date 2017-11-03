@@ -25,8 +25,8 @@ class DatasetAction(object):
 
     @staticmethod
     def get_add_datasets(source, target):
-        names = set(t.name for t in target) - set(s.name for s in source)
-        results = [t for t in target if t.name in names]
+        dataset_ids = set(t.dataset_id for t in target) - set(s.dataset_id for s in source)
+        results = [t for t in target if t.dataset_id in dataset_ids]
         return len(results), tuple(results)
 
     @staticmethod
@@ -37,21 +37,21 @@ class DatasetAction(object):
 
     @staticmethod
     def get_destroy_datasets(source, target):
-        names = set(s.name for s in source) - set(t.name for t in target)
-        results = [s for s in source if s.name in names]
+        dataset_ids = set(s.dataset_id for s in source) - set(t.dataset_id for t in target)
+        results = [s for s in source if s.dataset_id in dataset_ids]
         return len(results), tuple(results)
 
     @staticmethod
     def get_intersection_datasets(source, target):
-        names = set(s.name for s in source) & set(t.name for t in target)
-        results = [s for s in source if s.name in names]
+        dataset_ids = set(s.dataset_id for s in source) & set(t.dataset_id for t in target)
+        results = [s for s in source if s.dataset_id in dataset_ids]
         return len(results), tuple(results)
 
     def list_datasets(self):
         datasets = []
         for dataset in self.client.list_datasets():
             click.echo('Load: ' + dataset.path)
-            datasets.append(BigQueryDataset.from_dataset(dataset))
+            datasets.append(BigQueryDataset.from_dataset(self.client, dataset.dataset_id))
         click.echo('------------------------------------------------------------------------')
         click.echo()
         return datasets
@@ -60,13 +60,11 @@ class DatasetAction(object):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        datasets = self.client.list_datasets()
-        for dataset in datasets:
-            dataset.reload()
+        for dataset in self.client.list_datasets():
             click.echo('Export: {0}'.format(dataset.path))
-            data = dump_dataset(BigQueryDataset.from_dataset(dataset))
+            data = dump_dataset(BigQueryDataset.from_dataset(self.client, dataset.dataset_id))
             _logger.debug(data)
-            with codecs.open(os.path.join(output_dir, '{0}.yml'.format(dataset.name)),
+            with codecs.open(os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id)),
                              'wb', 'utf-8') as f:
                 f.write(data)
 
@@ -74,7 +72,7 @@ class DatasetAction(object):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  + {0}'.format(dataset.name), fg='green')
+            click.secho('  + {0}'.format(dataset.dataset_id), fg='green')
             for line in dump_dataset(dataset).splitlines():
                 click.echo('    {0}'.format(line))
             click.echo()
@@ -96,8 +94,8 @@ class DatasetAction(object):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  ~ {0}'.format(dataset.name), fg='yellow')
-            old_dataset = next((o for o in source if o.name == dataset.name), None)
+            click.secho('  ~ {0}'.format(dataset.dataset_id), fg='yellow')
+            old_dataset = next((o for o in source if o.dataset_id == dataset.dataset_id), None)
             for d in ndiff(old_dataset, dataset):
                 click.echo('    {0}'.format(d))
             click.echo()
@@ -108,7 +106,7 @@ class DatasetAction(object):
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
             converted = BigQueryDataset.to_dataset(self.client, dataset)
-            old_dataset = next((o for o in source if o.name == dataset.name), None)
+            old_dataset = next((o for o in source if o.dataset_id == dataset.dataset_id), None)
             diff = ndiff(old_dataset, dataset)
             click.secho('  Changing... {0}'.format(converted.path), fg='yellow')
             for d in diff:
@@ -121,7 +119,7 @@ class DatasetAction(object):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  - {0}'.format(dataset.name), fg='red')
+            click.secho('  - {0}'.format(dataset.dataset_id), fg='red')
             click.echo()
         return count
 
@@ -139,7 +137,7 @@ class DatasetAction(object):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  - {0}'.format(dataset.name), fg='red')
+            click.secho('  - {0}'.format(dataset.dataset_id), fg='red')
             click.echo()
         return count
 
@@ -148,7 +146,7 @@ class DatasetAction(object):
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
             converted = BigQueryDataset.to_dataset(self.client, dataset)
-            click.secho('  Destroying... {0}'.format(dataset.name), fg='red')
+            click.secho('  Destroying... {0}'.format(dataset.dataset_id), fg='red')
             converted.delete()
             click.echo()
         return count
