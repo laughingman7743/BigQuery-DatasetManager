@@ -86,7 +86,7 @@ class DatasetAction(object):
             click.secho('  Adding... {0}'.format(converted.path), fg='green')
             for line in dump_dataset(dataset).splitlines():
                 click.echo('    {0}'.format(line))
-            converted.create()
+            self.client.create_dataset(converted)
             click.echo()
         return count
 
@@ -111,7 +111,12 @@ class DatasetAction(object):
             click.secho('  Changing... {0}'.format(converted.path), fg='yellow')
             for d in diff:
                 click.echo('    {0}'.format(d))
-            converted.update()
+            self.client.update_dataset(converted, [
+                'friendly_name',
+                'description',
+                'default_table_expiration_ms',
+                'access_entries'
+            ])
             click.echo()
         return count
 
@@ -129,7 +134,7 @@ class DatasetAction(object):
         for dataset in datasets:
             converted = BigQueryDataset.to_dataset(self.client, dataset)
             click.secho('  Destroying... {0}'.format(converted.path), fg='red')
-            converted.delete()
+            self.client.delete_dataset(converted)
             click.echo()
         return count
 
@@ -147,6 +152,6 @@ class DatasetAction(object):
         for dataset in datasets:
             converted = BigQueryDataset.to_dataset(self.client, dataset)
             click.secho('  Destroying... {0}'.format(dataset.dataset_id), fg='red')
-            converted.delete()
+            self.client.delete_dataset(converted)
             click.echo()
         return count

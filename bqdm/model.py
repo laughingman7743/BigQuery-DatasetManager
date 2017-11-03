@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from collections import OrderedDict
 
 from future.utils import iteritems
-from google.cloud.bigquery.dataset import AccessEntry
+from google.cloud.bigquery.dataset import AccessEntry, Dataset
 
 
 class BigQueryDataset(object):
@@ -49,7 +49,7 @@ class BigQueryDataset(object):
         if access_entries:
             access_entries = tuple([BigQueryAccessEntry.to_access_entry(a) for a in access_entries])
         dataset_ref = client.dataset(value.dataset_id)
-        dataset = client.get_dataset(dataset_ref)
+        dataset = Dataset(dataset_ref)
         dataset.friendly_name = value.friendly_name
         dataset.description = value.description
         dataset.default_table_expiration_ms = value.default_table_expiration_ms
