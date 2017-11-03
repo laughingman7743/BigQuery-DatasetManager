@@ -43,6 +43,7 @@ class TestModel(unittest.TestCase):
             None,
             None
         )
+
         self.assertEqual(dataset1, dataset2)
         self.assertNotEqual(dataset1, dataset3)
         self.assertNotEqual(dataset1, dataset4)
@@ -132,6 +133,7 @@ class TestModel(unittest.TestCase):
             None,
             [access_entry1, access_entry2]
         )
+
         self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry2)
         self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry3)
         self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry4)
@@ -150,6 +152,7 @@ class TestModel(unittest.TestCase):
             None,
             None
         )
+
         dataset_from_dict1 = BigQueryDataset.from_dict({
             'dataset_id': 'test',
             'friendly_name': 'test_friendly_name',
@@ -177,6 +180,7 @@ class TestModel(unittest.TestCase):
             'labels': None,
             'access_entries': None
         })
+
         self.assertEqual(dataset, dataset_from_dict1)
         self.assertNotEqual(dataset, dataset_from_dict2)
         self.assertNotEqual(dataset, dataset_from_dict3)
@@ -233,6 +237,7 @@ class TestModel(unittest.TestCase):
             None,
             [access_entry1, access_entry1]
         )
+
         dataset_with_access_entry_from_dict1 = BigQueryDataset.from_dict({
             'dataset_id': 'test',
             'friendly_name': 'test_friendly_name',
@@ -311,6 +316,7 @@ class TestModel(unittest.TestCase):
                 }
             ]
         })
+
         self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict1)
         self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict2)
         self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict3)
@@ -323,3 +329,60 @@ class TestModel(unittest.TestCase):
         self.assertEqual(dataset_with_access_entry4, dataset_with_access_entry_from_dict4)
         self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict4)
         self.assertEqual(dataset_with_access_entry4, dataset_with_access_entry_from_dict1)
+
+    def test_dataset_from_dict_with_label(self):
+        label1 = {
+            'foo': 'bar'
+        }
+        label2 = {
+            'aaa': 'bbb',
+            'ccc': 'ddd'
+        }
+
+        dataset_with_label1 = BigQueryDataset(
+            'test',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label1,
+            None
+        )
+        dataset_with_label2 = BigQueryDataset(
+            'test',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label2,
+            None
+        )
+
+        dataset_with_label_from_dict1 = BigQueryDataset.from_dict({
+            'dataset_id': 'test',
+            'friendly_name': 'test_friendly_name',
+            'description': 'test_description',
+            'default_table_expiration_ms': 24 * 30 * 60 * 1000,
+            'location': 'US',
+            'labels': {
+                'foo': 'bar'
+            },
+            'access_entries': None
+        })
+        dataset_with_label_from_dict2 = BigQueryDataset.from_dict({
+            'dataset_id': 'test',
+            'friendly_name': 'test_friendly_name',
+            'description': 'test_description',
+            'default_table_expiration_ms': 24 * 30 * 60 * 1000,
+            'location': 'US',
+            'labels': {
+                'aaa': 'bbb',
+                'ccc': 'ddd'
+            },
+            'access_entries': None
+        })
+
+        self.assertEqual(dataset_with_label1, dataset_with_label_from_dict1)
+        self.assertNotEqual(dataset_with_label1, dataset_with_label_from_dict2)
+        self.assertNotEqual(dataset_with_label2, dataset_with_label_from_dict1)
+        self.assertEqual(dataset_with_label2, dataset_with_label_from_dict2)

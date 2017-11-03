@@ -119,3 +119,53 @@ access_entries:
         tableId: test_table
 """
         self.assertEqual(actual_dump_data4, expected_dump_data4)
+
+        label5 = {
+            'foo': 'bar'
+        }
+        dataset5 = BigQueryDataset(
+            'test5',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label5,
+            None
+        )
+        actual_dump_data5 = dump_dataset(dataset5)
+        expected_dump_data5 = """dataset_id: test5
+friendly_name: test_friendly_name
+description: test_description
+default_table_expiration_ms: 43200000
+location: US
+labels:
+    foo: bar
+access_entries: null
+"""
+        self.assertEqual(actual_dump_data5, expected_dump_data5)
+
+        label6 = {
+            'aaa': 'bbb',
+            'ccc': 'ddd'
+        }
+        dataset6 = BigQueryDataset(
+            'test6',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label6,
+            None
+        )
+        actual_dump_data6 = dump_dataset(dataset6)
+        expected_dump_data6 = """dataset_id: test6
+friendly_name: test_friendly_name
+description: test_description
+default_table_expiration_ms: 43200000
+location: US
+labels:
+    aaa: bbb
+    ccc: ddd
+access_entries: null
+"""
+        self.assertEqual(actual_dump_data6, expected_dump_data6)
