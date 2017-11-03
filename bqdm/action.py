@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import codecs
 import logging
 import os
 import sys
 
 import click
+from future.utils import iteritems
 from google.cloud import bigquery
 
 from bqdm.model import BigQueryDataset
@@ -116,10 +118,18 @@ class DatasetAction(object):
             click.secho('  Changing... {0}'.format(converted.path), fg='yellow')
             for d in diff:
                 click.echo('    {0}'.format(d))
+            old_labels = old_dataset.labels
+            if old_labels:
+                labels = converted.labels.copy()
+                for k, v in iteritems(old_labels):
+                    if k not in labels.keys():
+                        labels[k] = None
+                converted.labels = labels
             self.client.update_dataset(converted, [
                 'friendly_name',
                 'description',
                 'default_table_expiration_ms',
+                'labels',
                 'access_entries'
             ])
             click.echo()

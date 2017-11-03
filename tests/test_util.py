@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import unittest
 
 from bqdm.model import BigQueryDataset, BigQueryAccessEntry
@@ -14,6 +15,7 @@ class TestUtil(unittest.TestCase):
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             None
         )
         actual_dump_data1 = dump_dataset(dataset1)
@@ -22,6 +24,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries: null
 """
         self.assertEqual(actual_dump_data1, expected_dump_data1)
@@ -37,6 +40,7 @@ access_entries: null
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2]
         )
         actual_dump_data2 = dump_dataset(dataset2)
@@ -45,6 +49,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: OWNER
     entity_type: specialGroup
@@ -67,6 +72,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry3]
         )
         actual_dump_data3 = dump_dataset(dataset3)
@@ -75,6 +81,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: null
     entity_type: view
@@ -91,6 +98,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
+            None,
             [access_entry2, access_entry3]
         )
         actual_dump_data4 = dump_dataset(dataset4)
@@ -99,6 +107,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
+labels: null
 access_entries:
 -   role: OWNER
     entity_type: specialGroup
@@ -111,3 +120,53 @@ access_entries:
         tableId: test_table
 """
         self.assertEqual(actual_dump_data4, expected_dump_data4)
+
+        label5 = {
+            'foo': 'bar'
+        }
+        dataset5 = BigQueryDataset(
+            'test5',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label5,
+            None
+        )
+        actual_dump_data5 = dump_dataset(dataset5)
+        expected_dump_data5 = """dataset_id: test5
+friendly_name: test_friendly_name
+description: test_description
+default_table_expiration_ms: 43200000
+location: US
+labels:
+    foo: bar
+access_entries: null
+"""
+        self.assertEqual(actual_dump_data5, expected_dump_data5)
+
+        label6 = {
+            'aaa': 'bbb',
+            'ccc': 'ddd'
+        }
+        dataset6 = BigQueryDataset(
+            'test6',
+            'test_friendly_name',
+            'test_description',
+            24 * 30 * 60 * 1000,
+            'US',
+            label6,
+            None
+        )
+        actual_dump_data6 = dump_dataset(dataset6)
+        expected_dump_data6 = """dataset_id: test6
+friendly_name: test_friendly_name
+description: test_description
+default_table_expiration_ms: 43200000
+location: US
+labels:
+    aaa: bbb
+    ccc: ddd
+access_entries: null
+"""
+        self.assertEqual(actual_dump_data6, expected_dump_data6)

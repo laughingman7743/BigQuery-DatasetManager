@@ -44,6 +44,8 @@ The resource representation of the dataset is described in `YAML format`_.
     description: null
     default_table_expiration_ms: null
     location: US
+    labels:
+        foo: bar
     access_entries:
     -   role: OWNER
         entity_type: specialGroup
@@ -74,6 +76,8 @@ See `the official documentation of BigQuery Datasets`_ for details of key names.
 | default_table_expiration_ms              | int     | Default expiration time for tables in the dataset.       |
 +----------------+-------------+-----------+---------+----------------------------------------------------------+
 | location                                 | str     | Location in which the dataset is hosted.                 |
++----------------+-------------+-----------+---------+----------------------------------------------------------+
+| labels                                   | map     | Labels for the dataset.                                  |
 +----------------+-------------+-----------+---------+----------------------------------------------------------+
 | access_entries                           | seq     | Represent grant of an access role to an entity.          |
 +----------------+-------------+-----------+---------+----------------------------------------------------------+
@@ -277,7 +281,4 @@ Run test multiple Python versions
 TODO
 ----
 
-#. Support labels field (Currently ``google-cloud-bigquery`` `does not support labels field of Datasets`_)
 #. Manage table resources
-
-.. _`does not support labels field of Datasets`: https://github.com/GoogleCloudPlatform/google-cloud-python/issues/2931

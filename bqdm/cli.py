@@ -13,7 +13,7 @@ import bqdm.message as msg
 from bqdm import CONTEXT_SETTINGS
 from bqdm.action import DatasetAction
 from bqdm.model import BigQueryDataset, BigQueryAccessEntry
-from bqdm.util import list_local_datasets, ordered_dict_constructor, str_representer
+from bqdm.util import list_local_datasets, str_representer
 
 
 _logger = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ yaml.add_representer(str, str_representer)
 yaml.add_representer(unicode, str_representer)
 yaml.add_representer(BigQueryDataset, BigQueryDataset.represent)
 yaml.add_representer(BigQueryAccessEntry, BigQueryAccessEntry.represent)
-yaml.add_constructor('tag:yaml.org,2002:map', ordered_dict_constructor)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
