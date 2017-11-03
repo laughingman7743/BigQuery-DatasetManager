@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.model import BigQueryDataset, BigQueryAccessGrant
 from bqdm.util import dump_dataset
 
 
@@ -22,11 +22,11 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
-access_entries: null
+access_grants: null
 """
         self.assertEqual(actual_dump_data1, expected_dump_data1)
 
-        access_entry2 = BigQueryAccessEntry(
+        access_grant2 = BigQueryAccessGrant(
             'OWNER',
             'specialGroup',
             'projectOwners'
@@ -37,7 +37,7 @@ access_entries: null
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry2]
+            [access_grant2]
         )
         actual_dump_data2 = dump_dataset(dataset2)
         expected_dump_data2 = """name: test2
@@ -45,14 +45,14 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
-access_entries:
+access_grants:
 -   role: OWNER
     entity_type: specialGroup
     entity_id: projectOwners
 """
         self.assertEqual(actual_dump_data2, expected_dump_data2)
 
-        access_entry3 = BigQueryAccessEntry(
+        access_grant3 = BigQueryAccessGrant(
             None,
             'view',
             {
@@ -67,7 +67,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry3]
+            [access_grant3]
         )
         actual_dump_data3 = dump_dataset(dataset3)
         expected_dump_data3 = """name: test3
@@ -75,7 +75,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
-access_entries:
+access_grants:
 -   role: null
     entity_type: view
     entity_id:
@@ -91,7 +91,7 @@ access_entries:
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry2, access_entry3]
+            [access_grant2, access_grant3]
         )
         actual_dump_data4 = dump_dataset(dataset4)
         expected_dump_data4 = """name: test4
@@ -99,7 +99,7 @@ friendly_name: test_friendly_name
 description: test_description
 default_table_expiration_ms: 43200000
 location: US
-access_entries:
+access_grants:
 -   role: OWNER
     entity_type: specialGroup
     entity_id: projectOwners

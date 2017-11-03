@@ -2,7 +2,7 @@
 import unittest
 
 from bqdm.action import DatasetAction
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.model import BigQueryDataset, BigQueryAccessGrant
 
 
 class TestAction(unittest.TestCase):
@@ -75,7 +75,7 @@ class TestAction(unittest.TestCase):
             24 * 30 * 60 * 1000,
             'US',
             [
-                BigQueryAccessEntry(
+                BigQueryAccessGrant(
                     None,
                     'view',
                     {
@@ -149,7 +149,7 @@ class TestAction(unittest.TestCase):
             24 * 30 * 60 * 1000,
             'US',
             [
-                BigQueryAccessEntry(
+                BigQueryAccessGrant(
                     None,
                     'view',
                     {
@@ -223,7 +223,7 @@ class TestAction(unittest.TestCase):
             24 * 30 * 60 * 1000,
             'US',
             [
-                BigQueryAccessEntry(
+                BigQueryAccessGrant(
                     None,
                     'view',
                     {

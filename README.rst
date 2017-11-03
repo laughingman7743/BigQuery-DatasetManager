@@ -44,7 +44,7 @@ The resource representation of the dataset is described in `YAML format`_.
     description: null
     default_table_expiration_ms: null
     location: US
-    access_entries:
+    access_grants:
     -   role: OWNER
         entity_type: specialGroup
         entity_id: projectOwners
@@ -62,48 +62,48 @@ The resource representation of the dataset is described in `YAML format`_.
 
 See `the official documentation of BigQuery Datasets`_ for details of key names.
 
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| Key name                                 | Value   | Description                                              |
-+================+=============+===========+=========+==========================================================+
-| name                                     | str     | The name of the dataset.                                 |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| friendly_name                            | str     | Title of the dataset.                                    |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| description                              | str     | Description of the dataset.                              |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| default_table_expiration_ms              | int     | Default expiration time for tables in the dataset.       |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| location                                 | str     | Location in which the dataset is hosted.                 |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| access_entries                           | seq     | Represent grant of an access role to an entity.          |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
-| access_entries | role                    | str     | Role granted to the entity. One of                       |
-|                |                         |         |                                                          |
-|                |                         |         | * ``OWNER``                                              |
-|                |                         |         | * ``WRITER``                                             |
-|                |                         |         | * ``READER``                                             |
-|                |                         |         |                                                          |
-|                |                         |         | May also be ``None`` if the ``entity_type`` is ``view``. |
-+                +-------------+-----------+---------+----------------------------------------------------------+
-|                | entity_type             | str     | Type of entity being granted the role. One of            |
-|                |                         |         |                                                          |
-|                |                         |         | * ``userByEmail``                                        |
-|                |                         |         | * ``groupByEmail``                                       |
-|                |                         |         | * ``domain``                                             |
-|                |                         |         | * ``specialGroup``                                       |
-|                |                         |         | * ``view``                                               |
-+                +-------------+-----------+---------+----------------------------------------------------------+
-|                | entity_id   |           | str/map | ID of entity being granted the role.                     |
-+                +             +-----------+---------+----------------------------------------------------------+
-|                |             | datasetId | str     | The ID of the dataset containing this table.             |
-|                |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
-+                +             +-----------+---------+----------------------------------------------------------+
-|                |             | projectId | str     | The ID of the project containing this table.             |
-|                |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
-+                +             +-----------+---------+----------------------------------------------------------+
-|                |             | tableId   | str     | The ID of the table.                                     |
-|                |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
-+----------------+-------------+-----------+---------+----------------------------------------------------------+
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| Key name                                | Value   | Description                                              |
++===============+=============+===========+=========+==========================================================+
+| name                                    | str     | The name of the dataset.                                 |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| friendly_name                           | str     | Title of the dataset.                                    |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| description                             | str     | Description of the dataset.                              |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| default_table_expiration_ms             | int     | Default expiration time for tables in the dataset.       |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| location                                | str     | Location in which the dataset is hosted.                 |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| access_grants                           | seq     | Roles granted to entities for this dataset.              |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
+| access_grants | role                    | str     | Role granted to the entity. One of                       |
+|               |                         |         |                                                          |
+|               |                         |         | * ``OWNER``                                              |
+|               |                         |         | * ``WRITER``                                             |
+|               |                         |         | * ``READER``                                             |
+|               |                         |         |                                                          |
+|               |                         |         | May also be ``None`` if the ``entity_type`` is ``view``. |
++               +-------------+-----------+---------+----------------------------------------------------------+
+|               | entity_type             | str     | Type of entity being granted the role. One of            |
+|               |                         |         |                                                          |
+|               |                         |         | * ``userByEmail``                                        |
+|               |                         |         | * ``groupByEmail``                                       |
+|               |                         |         | * ``domain``                                             |
+|               |                         |         | * ``specialGroup``                                       |
+|               |                         |         | * ``view``                                               |
++               +-------------+-----------+---------+----------------------------------------------------------+
+|               | entity_id   |           | str/map | ID of entity being granted the role.                     |
++               +             +-----------+---------+----------------------------------------------------------+
+|               |             | datasetId | str     | The ID of the dataset containing this table.             |
+|               |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
++               +             +-----------+---------+----------------------------------------------------------+
+|               |             | projectId | str     | The ID of the project containing this table.             |
+|               |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
++               +             +-----------+---------+----------------------------------------------------------+
+|               |             | tableId   | str     | The ID of the table.                                     |
+|               |             |           |         | (Specified when ``entity_type`` is ``view``.)            |
++---------------+-------------+-----------+---------+----------------------------------------------------------+
 
 .. _`the official documentation of BigQuery Datasets`: https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets
 

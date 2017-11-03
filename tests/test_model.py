@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.model import BigQueryDataset, BigQueryAccessGrant
 
 
 class TestModel(unittest.TestCase):
@@ -44,18 +44,18 @@ class TestModel(unittest.TestCase):
         self.assertNotEqual(dataset1, dataset4)
         self.assertNotEqual(dataset3, dataset4)
 
-    def test_eq_dataset_with_access_entry(self):
-        access_entry1 = BigQueryAccessEntry(
+    def test_eq_dataset_with_access_grant(self):
+        access_grant1 = BigQueryAccessGrant(
             'OWNER',
             'specialGroup',
             'projectOwners'
         )
-        access_entry2 = BigQueryAccessEntry(
+        access_grant2 = BigQueryAccessGrant(
             'OWNER',
             'specialGroup',
             'projectOwners'
         )
-        access_entry3 = BigQueryAccessEntry(
+        access_grant3 = BigQueryAccessGrant(
             None,
             'view',
             {
@@ -65,69 +65,69 @@ class TestModel(unittest.TestCase):
             }
         )
 
-        dataset_with_access_entry1 = BigQueryDataset(
+        dataset_with_access_grant1 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1]
+            [access_grant1]
         )
-        dataset_with_access_entry2 = BigQueryDataset(
+        dataset_with_access_grant2 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry2]
+            [access_grant2]
         )
-        dataset_with_access_entry3 = BigQueryDataset(
+        dataset_with_access_grant3 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry3]
+            [access_grant3]
         )
-        dataset_with_access_entry4 = BigQueryDataset(
+        dataset_with_access_grant4 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1]
+            [access_grant1]
         )
-        dataset_with_access_entry5 = BigQueryDataset(
+        dataset_with_access_grant5 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1, access_entry3]
+            [access_grant1, access_grant3]
         )
-        dataset_with_access_entry6 = BigQueryDataset(
+        dataset_with_access_grant6 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry3, access_entry1]
+            [access_grant3, access_grant1]
         )
-        dataset_with_access_entry7 = BigQueryDataset(
+        dataset_with_access_grant7 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1, access_entry2]
+            [access_grant1, access_grant2]
         )
-        self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry2)
-        self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry3)
-        self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry4)
-        self.assertNotEqual(dataset_with_access_entry3, dataset_with_access_entry4)
-        self.assertEqual(dataset_with_access_entry5, dataset_with_access_entry6)
-        self.assertEqual(dataset_with_access_entry4, dataset_with_access_entry7)
-        self.assertNotEqual(dataset_with_access_entry6, dataset_with_access_entry7)
+        self.assertEqual(dataset_with_access_grant1, dataset_with_access_grant2)
+        self.assertNotEqual(dataset_with_access_grant1, dataset_with_access_grant3)
+        self.assertNotEqual(dataset_with_access_grant1, dataset_with_access_grant4)
+        self.assertNotEqual(dataset_with_access_grant3, dataset_with_access_grant4)
+        self.assertEqual(dataset_with_access_grant5, dataset_with_access_grant6)
+        self.assertEqual(dataset_with_access_grant4, dataset_with_access_grant7)
+        self.assertNotEqual(dataset_with_access_grant6, dataset_with_access_grant7)
 
     def test_dataset_from_dict(self):
         dataset = BigQueryDataset(
@@ -144,7 +144,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
-            'access_entris': None
+            'access_grants': None
         })
         dataset_from_dict2 = BigQueryDataset.from_dict({
             'name': 'test',
@@ -152,7 +152,7 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': None,
             'location': 'US',
-            'access_entries': None
+            'access_grants': None
         })
         dataset_from_dict3 = BigQueryDataset.from_dict({
             'name': 'foo',
@@ -160,19 +160,19 @@ class TestModel(unittest.TestCase):
             'description': 'test_description',
             'default_table_expiration_ms': None,
             'location': 'US',
-            'access_entries': None
+            'access_grants': None
         })
         self.assertEqual(dataset, dataset_from_dict1)
         self.assertNotEqual(dataset, dataset_from_dict2)
         self.assertNotEqual(dataset, dataset_from_dict3)
 
-    def test_dataset_from_dict_with_access_entry(self):
-        access_entry1 = BigQueryAccessEntry(
+    def test_dataset_from_dict_with_access_grant(self):
+        access_grant1 = BigQueryAccessGrant(
             'OWNER',
             'specialGroup',
             'projectOwners'
         )
-        access_entry2 = BigQueryAccessEntry(
+        access_grant2 = BigQueryAccessGrant(
             None,
             'view',
             {
@@ -182,45 +182,45 @@ class TestModel(unittest.TestCase):
             }
         )
 
-        dataset_with_access_entry1 = BigQueryDataset(
+        dataset_with_access_grant1 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1]
+            [access_grant1]
         )
-        dataset_with_access_entry2 = BigQueryDataset(
+        dataset_with_access_grant2 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry2]
+            [access_grant2]
         )
-        dataset_with_access_entry3 = BigQueryDataset(
+        dataset_with_access_grant3 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1, access_entry2]
+            [access_grant1, access_grant2]
         )
-        dataset_with_access_entry4 = BigQueryDataset(
+        dataset_with_access_grant4 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 30 * 60 * 1000,
             'US',
-            [access_entry1, access_entry1]
+            [access_grant1, access_grant1]
         )
-        dataset_with_access_entry_from_dict1 = BigQueryDataset.from_dict({
+        dataset_with_access_grant_from_dict1 = BigQueryDataset.from_dict({
             'name': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
-            'access_entries': [
+            'access_grants': [
                 {
                     'role': 'OWNER',
                     'entity_type': 'specialGroup',
@@ -228,13 +228,13 @@ class TestModel(unittest.TestCase):
                 }
             ]
         })
-        dataset_with_access_entry_from_dict2 = BigQueryDataset.from_dict({
+        dataset_with_access_grant_from_dict2 = BigQueryDataset.from_dict({
             'name': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
-            'access_entries': [
+            'access_grants': [
                 {
                     'role': None,
                     'entity_type': 'view',
@@ -246,13 +246,13 @@ class TestModel(unittest.TestCase):
                 }
             ]
         })
-        dataset_with_access_entry_from_dict3 = BigQueryDataset.from_dict({
+        dataset_with_access_grant_from_dict3 = BigQueryDataset.from_dict({
             'name': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
-            'access_entries': [
+            'access_grants': [
                 {
                     'role': 'OWNER',
                     'entity_type': 'specialGroup',
@@ -269,13 +269,13 @@ class TestModel(unittest.TestCase):
                 }
             ]
         })
-        dataset_with_access_entry_from_dict4 = BigQueryDataset.from_dict({
+        dataset_with_access_grant_from_dict4 = BigQueryDataset.from_dict({
             'name': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
             'default_table_expiration_ms': 24 * 30 * 60 * 1000,
             'location': 'US',
-            'access_entries': [
+            'access_grants': [
                 {
                     'role': 'OWNER',
                     'entity_type': 'specialGroup',
@@ -288,15 +288,15 @@ class TestModel(unittest.TestCase):
                 }
             ]
         })
-        self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict1)
-        self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict2)
-        self.assertNotEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict3)
-        self.assertEqual(dataset_with_access_entry2, dataset_with_access_entry_from_dict2)
-        self.assertNotEqual(dataset_with_access_entry2, dataset_with_access_entry_from_dict1)
-        self.assertNotEqual(dataset_with_access_entry2, dataset_with_access_entry_from_dict3)
-        self.assertEqual(dataset_with_access_entry3, dataset_with_access_entry_from_dict3)
-        self.assertNotEqual(dataset_with_access_entry3, dataset_with_access_entry_from_dict1)
-        self.assertNotEqual(dataset_with_access_entry3, dataset_with_access_entry_from_dict2)
-        self.assertEqual(dataset_with_access_entry4, dataset_with_access_entry_from_dict4)
-        self.assertEqual(dataset_with_access_entry1, dataset_with_access_entry_from_dict4)
-        self.assertEqual(dataset_with_access_entry4, dataset_with_access_entry_from_dict1)
+        self.assertEqual(dataset_with_access_grant1, dataset_with_access_grant_from_dict1)
+        self.assertNotEqual(dataset_with_access_grant1, dataset_with_access_grant_from_dict2)
+        self.assertNotEqual(dataset_with_access_grant1, dataset_with_access_grant_from_dict3)
+        self.assertEqual(dataset_with_access_grant2, dataset_with_access_grant_from_dict2)
+        self.assertNotEqual(dataset_with_access_grant2, dataset_with_access_grant_from_dict1)
+        self.assertNotEqual(dataset_with_access_grant2, dataset_with_access_grant_from_dict3)
+        self.assertEqual(dataset_with_access_grant3, dataset_with_access_grant_from_dict3)
+        self.assertNotEqual(dataset_with_access_grant3, dataset_with_access_grant_from_dict1)
+        self.assertNotEqual(dataset_with_access_grant3, dataset_with_access_grant_from_dict2)
+        self.assertEqual(dataset_with_access_grant4, dataset_with_access_grant_from_dict4)
+        self.assertEqual(dataset_with_access_grant1, dataset_with_access_grant_from_dict4)
+        self.assertEqual(dataset_with_access_grant4, dataset_with_access_grant_from_dict1)
