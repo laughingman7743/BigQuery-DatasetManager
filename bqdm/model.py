@@ -30,9 +30,7 @@ class BigQueryDataset(object):
                                access_entries)
 
     @staticmethod
-    def from_dataset(client, dataset_id):
-        dataset_ref = client.dataset(dataset_id)
-        dataset = client.get_dataset(dataset_ref)
+    def from_dataset(dataset):
         access_entries = dataset.access_entries
         if access_entries:
             access_entries = [BigQueryAccessEntry.from_access_entry(a) for a in access_entries]

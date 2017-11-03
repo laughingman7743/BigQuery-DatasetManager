@@ -50,8 +50,10 @@ class DatasetAction(object):
     def list_datasets(self):
         datasets = []
         for dataset in self.client.list_datasets():
-            click.echo('Load: ' + dataset.path)
-            datasets.append(BigQueryDataset.from_dataset(self.client, dataset.dataset_id))
+            dataset_ref = self.client.dataset(dataset.dataset_id)
+            detailed = self.client.get_dataset(dataset_ref)
+            click.echo('Load: ' + detailed.path)
+            datasets.append(BigQueryDataset.from_dataset(detailed))
         click.echo('------------------------------------------------------------------------')
         click.echo()
         return datasets
@@ -60,12 +62,12 @@ class DatasetAction(object):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        for dataset in self.client.list_datasets():
-            click.echo('Export: {0}'.format(dataset.path))
-            data = dump_dataset(BigQueryDataset.from_dataset(self.client, dataset.dataset_id))
+        for dataset in self.list_datasets():
+            data = dump_dataset(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
-            with codecs.open(os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id)),
-                             'wb', 'utf-8') as f:
+            export_path = os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id))
+            click.echo('Export: {0}'.format(export_path))
+            with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
 
     def plan_add(self, source, target):
