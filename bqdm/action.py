@@ -87,6 +87,9 @@ class DatasetAction(object):
             for line in dump_dataset(dataset).splitlines():
                 click.echo('    {0}'.format(line))
             self.client.create_dataset(converted)
+            self.client.update_dataset(converted, [
+                'access_entries'
+            ])
             click.echo()
         return count
 
