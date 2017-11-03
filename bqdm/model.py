@@ -3,51 +3,51 @@ from __future__ import absolute_import
 from collections import OrderedDict
 
 from future.utils import iteritems
-from google.cloud.bigquery.dataset import Dataset, AccessEntry
+from google.cloud.bigquery.dataset import Dataset, AccessGrant
 
 
 class BigQueryDataset(object):
 
     def __init__(self, name, friendly_name, description,
-                 default_table_expiration_ms, location, access_entries):
+                 default_table_expiration_ms, location, access_grants):
         self.name = name
         self.friendly_name = friendly_name
         self.description = description
         self.default_table_expiration_ms = default_table_expiration_ms
         self.location = location
-        self.access_entries = access_entries
+        self.access_grants = access_grants
 
     @staticmethod
     def from_dict(value):
-        access_entries = value.get('access_entries', None)
-        if access_entries:
-            access_entries = [BigQueryAccessEntry.from_dict(a) for a in access_entries]
+        access_grants = value.get('access_grants', None)
+        if access_grants:
+            access_grants = [BigQueryAccessGrant.from_dict(a) for a in access_grants]
         return BigQueryDataset(value.get('name', None),
                                value.get('friendly_name', None),
                                value.get('description', None),
                                value.get('default_table_expiration_ms', None),
                                value.get('location', None),
-                               access_entries)
+                               access_grants)
 
     @staticmethod
     def from_dataset(value):
         value.reload()
-        access_entries = value.access_entries
-        if access_entries:
-            access_entries = [BigQueryAccessEntry.from_access_entry(a) for a in access_entries]
+        access_grants = value.access_grants
+        if access_grants:
+            access_grants = [BigQueryAccessGrant.from_access_grant(a) for a in access_grants]
         return BigQueryDataset(value.name,
                                value.friendly_name,
                                value.description,
                                value.default_table_expiration_ms,
                                value.location,
-                               access_entries)
+                               access_grants)
 
     @staticmethod
     def to_dataset(client, value):
-        access_entries = value.access_entries
-        if access_entries:
-            access_entries = tuple([BigQueryAccessEntry.to_access_entry(a) for a in access_entries])
-        dataset = Dataset(value.name, client, access_entries)
+        access_grants = value.access_grants
+        if access_grants:
+            access_grants = tuple([BigQueryAccessGrant.to_access_grant(a) for a in access_grants])
+        dataset = Dataset(value.name, client, access_grants)
         dataset.friendly_name = value.friendly_name
         dataset.description = value.description
         dataset.default_table_expiration_ms = value.default_table_expiration_ms
@@ -64,7 +64,7 @@ class BigQueryDataset(object):
                 ('description', value.description),
                 ('default_table_expiration_ms', value.default_table_expiration_ms),
                 ('location', value.location),
-                ('access_entries', value.access_entries),
+                ('access_grants', value.access_grants),
             )
         )
 
@@ -74,8 +74,8 @@ class BigQueryDataset(object):
                 self.description,
                 self.default_table_expiration_ms,
                 self.location,
-                frozenset(self.access_entries) if self.access_entries is not None
-                else self.access_entries,)
+                frozenset(self.access_grants) if self.access_grants is not None
+                else self.access_grants,)
 
     def __eq__(self, other):
         if not isinstance(other, BigQueryDataset):
@@ -92,7 +92,7 @@ class BigQueryDataset(object):
         return 'BigQueryDataset{0}'.format(self._key())
 
 
-class BigQueryAccessEntry(object):
+class BigQueryAccessGrant(object):
 
     def __init__(self, role, entity_type, entity_id):
         self.role = role
@@ -101,21 +101,21 @@ class BigQueryAccessEntry(object):
 
     @staticmethod
     def from_dict(value):
-        return BigQueryAccessEntry(
+        return BigQueryAccessGrant(
             value.get('role', None),
             value.get('entity_type', None),
             value.get('entity_id', None),)
 
     @staticmethod
-    def from_access_entry(value):
-        return BigQueryAccessEntry(
+    def from_access_grant(value):
+        return BigQueryAccessGrant(
             value.role,
             value.entity_type,
             value.entity_id,)
 
     @staticmethod
-    def to_access_entry(value):
-        return AccessEntry(value.role, value.entity_type, value.entity_id)
+    def to_access_grant(value):
+        return AccessGrant(value.role, value.entity_type, value.entity_id)
 
     @staticmethod
     def represent(dumper, value):
@@ -135,7 +135,7 @@ class BigQueryAccessEntry(object):
                 if isinstance(self.entity_id, (dict, OrderedDict,)) else self.entity_id,)
 
     def __eq__(self, other):
-        if not isinstance(other, BigQueryAccessEntry):
+        if not isinstance(other, BigQueryAccessGrant):
             return NotImplemented
         return self._key() == other._key()
 
@@ -146,4 +146,4 @@ class BigQueryAccessEntry(object):
         return hash(self._key())
 
     def __repr__(self):
-        return 'BigQueryAccessEntry{0}'.format(self._key())
+        return 'BigQueryAccessGrant{0}'.format(self._key())

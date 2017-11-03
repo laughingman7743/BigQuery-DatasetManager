@@ -12,7 +12,7 @@ from past.types import unicode
 import bqdm.message as msg
 from bqdm import CONTEXT_SETTINGS
 from bqdm.action import DatasetAction
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.model import BigQueryDataset, BigQueryAccessGrant
 from bqdm.util import list_local_datasets, ordered_dict_constructor, str_representer
 
 
@@ -24,7 +24,7 @@ _logger.setLevel(logging.INFO)
 yaml.add_representer(str, str_representer)
 yaml.add_representer(unicode, str_representer)
 yaml.add_representer(BigQueryDataset, BigQueryDataset.represent)
-yaml.add_representer(BigQueryAccessEntry, BigQueryAccessEntry.represent)
+yaml.add_representer(BigQueryAccessGrant, BigQueryAccessGrant.represent)
 yaml.add_constructor('tag:yaml.org,2002:map', ordered_dict_constructor)
 
 
