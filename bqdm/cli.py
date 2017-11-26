@@ -11,10 +11,10 @@ from past.types import unicode
 
 import bqdm.message as msg
 from bqdm import CONTEXT_SETTINGS
-from bqdm.action import DatasetAction
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
-from bqdm.util import list_local_datasets, str_representer
-
+from bqdm.action import DatasetAction, TableAction, SchemaMigrationMode
+from bqdm.model import (BigQueryDataset, BigQueryAccessEntry,
+                        BigQueryTable, BigQuerySchemaField)
+from bqdm.util import list_local_datasets, str_representer, list_local_tables
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -25,6 +25,8 @@ yaml.add_representer(str, str_representer)
 yaml.add_representer(unicode, str_representer)
 yaml.add_representer(BigQueryDataset, BigQueryDataset.represent)
 yaml.add_representer(BigQueryAccessEntry, BigQueryAccessEntry.represent)
+yaml.add_representer(BigQueryTable, BigQueryTable.represent)
+yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -46,8 +48,11 @@ def cli(ctx, credential_file, debug):
 @click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OUTPUT_DIR)
 @click.pass_context
 def export(ctx, output_dir):
-    action = DatasetAction(ctx.obj['debug'])
-    action.export(output_dir)
+    dataset_action = DatasetAction(ctx.obj['debug'])
+    datasets = dataset_action.export(output_dir)
+    for dataset in datasets:
+        table_action = TableAction(dataset.dataset_id)
+        table_action.export(output_dir)
 
 
 @cli.command(help=msg.HELP_COMMAND_PLAN)
@@ -56,24 +61,33 @@ def export(ctx, output_dir):
 @click.option('--detailed_exitcode', is_flag=True, default=False, help=msg.HELP_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan(ctx, conf_dir, detailed_exitcode):
-    action = DatasetAction(ctx.obj['debug'])
-    old_datasets = action.list_datasets()
+    click.echo(msg.MESSAGE_PLAN_HEADER)
+
+    dataset_action = DatasetAction(ctx.obj['debug'])
+    old_datasets = dataset_action.list_datasets()
     new_datasets = list_local_datasets(conf_dir)
 
-    # echo header
-    click.echo(msg.MESSAGE_PLAN_HEADER)
-    # add
-    add_count = action.plan_add(old_datasets, new_datasets)
-    # change
-    change_count = action.plan_change(old_datasets, new_datasets)
-    # destroy
-    destroy_count = action.plan_destroy(old_datasets, new_datasets)
-    # echo summary
-    if add_count == 0 and change_count == 0 and destroy_count == 0:
+    add_dataset_count = dataset_action.plan_add(old_datasets, new_datasets)
+    change_dataset_count = dataset_action.plan_change(old_datasets, new_datasets)
+    destroy_dataset_count = dataset_action.plan_destroy(old_datasets, new_datasets)
+
+    add_table_count, change_table_count, destroy_table_count = 0, 0, 0
+    # TODO ThreadPoolExecutor
+    for dataset in new_datasets:
+        table_action = TableAction(dataset.dataset_id, debug=ctx.obj['debug'])
+        old_tables = table_action.list_tables()
+        new_tables = list_local_tables(conf_dir, dataset.dataset_id)
+        add_table_count += table_action.plan_add(old_tables, new_tables)
+        change_table_count += table_action.plan_change(old_tables, new_tables)
+        destroy_table_count += table_action.plan_destroy(old_tables, new_tables)
+
+    # TODO dataset & table summary
+    if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
-        click.echo(msg.MESSAGE_PLAN_SUMMARY.format(add_count, change_count, destroy_count))
+        click.echo(msg.MESSAGE_PLAN_SUMMARY.format(
+            add_dataset_count, change_dataset_count, destroy_dataset_count))
         click.echo()
         if detailed_exitcode:
             sys.exit(2)
@@ -82,24 +96,38 @@ def plan(ctx, conf_dir, detailed_exitcode):
 @cli.command(help=msg.HELP_COMMAND_APPLY)
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
               help=msg.HELP_CONF_DIR)
+@click.option('--mode', '-m', type=click.Choice([
+    SchemaMigrationMode.SELECT_INSERT,
+    SchemaMigrationMode.SELECT_INSERT_EMPTY,
+    SchemaMigrationMode.DROP_CREATE
+]), required=True, help=msg.HELP_MIGRATION_MODE)
 @click.pass_context
-def apply(ctx, conf_dir):
-    action = DatasetAction(ctx.obj['debug'])
-    old_datasets = action.list_datasets()
+def apply(ctx, conf_dir, mode):
+    dataset_action = DatasetAction(ctx.obj['debug'])
+    old_datasets = dataset_action.list_datasets()
     new_datasets = list_local_datasets(conf_dir)
 
-    # add
-    add_count = action.add(old_datasets, new_datasets)
-    # change
-    change_count = action.change(old_datasets, new_datasets)
-    # destroy
-    destroy_count = action.destroy(old_datasets, new_datasets)
-    # echo summary
-    if add_count == 0 and change_count == 0 and destroy_count == 0:
+    add_dataset_count = dataset_action.add(old_datasets, new_datasets)
+    change_dataset_count = dataset_action.change(old_datasets, new_datasets)
+    destroy_dataset_count = dataset_action.destroy(old_datasets, new_datasets)
+
+    add_table_count, change_table_count, destroy_table_count = 0, 0, 0
+    # TODO ThreadPoolExecutor
+    for dataset in new_datasets:
+        table_action = TableAction(dataset.dataset_id, mode, debug=ctx.obj['debug'])
+        old_tables = table_action.list_tables()
+        new_tables = list_local_tables(conf_dir, dataset.dataset_id)
+        add_table_count += table_action.add(old_tables, new_tables)
+        change_table_count += table_action.change(old_tables, new_tables)
+        destroy_table_count += table_action.destroy(old_tables, new_tables)
+
+    # TODO dataset & table summary
+    if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
-        click.secho(msg.MESSAGE_APPLY_SUMMARY.format(add_count, change_count, destroy_count))
+        click.secho(msg.MESSAGE_APPLY_SUMMARY.format(
+            add_dataset_count, change_dataset_count, destroy_dataset_count))
         click.echo()
 
 
@@ -115,15 +143,12 @@ def destroy(ctx):
 @click.option('--detailed_exitcode', is_flag=True, default=False, help=msg.HELP_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
-    action = DatasetAction(ctx.obj['debug'])
-    old_datasets = action.list_datasets()
+    dataset_action = DatasetAction(ctx.obj['debug'])
+    old_datasets = dataset_action.list_datasets()
     new_datasets = list_local_datasets(conf_dir)
 
-    # echo header
     click.echo(msg.MESSAGE_PLAN_HEADER)
-    # destroy
-    destroy_count = action.plan_intersection_destroy(old_datasets, new_datasets)
-    # echo summary
+    destroy_count = dataset_action.plan_intersection_destroy(old_datasets, new_datasets)
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
@@ -139,13 +164,11 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_CONF_DIR)
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
-    action = DatasetAction(ctx.obj['debug'])
-    old_datasets = action.list_datasets()
+    dataset_action = DatasetAction(ctx.obj['debug'])
+    old_datasets = dataset_action.list_datasets()
     new_datasets = list_local_datasets(conf_dir)
 
-    # destroy
-    destroy_count = action.intersection_destroy(old_datasets, new_datasets)
-    # echo summary
+    destroy_count = dataset_action.intersection_destroy(old_datasets, new_datasets)
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()

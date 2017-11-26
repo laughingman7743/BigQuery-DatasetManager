@@ -5,7 +5,7 @@ import unittest
 from bqdm.model import BigQueryDataset, BigQueryAccessEntry
 
 
-class TestModel(unittest.TestCase):
+class TestBigQueryDataset(unittest.TestCase):
 
     def test_eq_dataset(self):
         dataset1 = BigQueryDataset(

@@ -7,11 +7,14 @@ import os
 
 import click
 import yaml
-from bqdm.model import BigQueryDataset
+from bqdm.model import BigQueryDataset, BigQueryTable
 
 
-def str_representer(_, data):
-    return yaml.ScalarNode('tag:yaml.org,2002:str', data)
+def str_representer(dumper, data):
+    if '\n' in data:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    else:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
 def dump_dataset(data):
@@ -32,6 +35,23 @@ def list_local_datasets(conf_dir):
     click.echo('------------------------------------------------------------------------')
     click.echo()
     return datasets
+
+
+def list_local_tables(conf_dir, dataset_id):
+    conf_dir = os.path.join(conf_dir, dataset_id)
+    if not os.path.exists(conf_dir):
+        # table resources unmanaged
+        return None
+
+    tables = []
+    confs = glob.glob(os.path.join(conf_dir, '*.yml'))
+    for conf in confs:
+        click.echo('Load: {0}'.format(conf))
+        with codecs.open(conf, 'rb', 'utf-8') as f:
+            tables.append(BigQueryTable.from_dict(yaml.load(f)))
+    click.echo('------------------------------------------------------------------------')
+    click.echo()
+    return tables
 
 
 def ndiff(source, target):

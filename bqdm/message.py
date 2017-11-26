@@ -32,6 +32,9 @@ more granular information about what the resulting plan contains:
 1 = Error
 2 = Succeeded with non-empty diff"""
 
+HELP_MIGRATION_MODE = """ TODO
+"""
+
 MESSAGE_PLAN_HEADER = """An execution plan has been generated and is shown below.
 
 Resource actions are indicated with the following symbols:
@@ -52,4 +55,4 @@ MESSAGE_APPLY_SUMMARY = 'Apply: {0} added, {1} changed, {2} destroyed'
 
 MESSAGE_APPLY_DESTROY_SUMMARY = 'Destroy: {0} destroyed'
 
-MESSAGE_SUMMARY_NO_CHANGE = 'No changes. Dataset is up-to-date.'
+MESSAGE_SUMMARY_NO_CHANGE = 'No changes. Dataset and table is up-to-date.'

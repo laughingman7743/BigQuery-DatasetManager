@@ -6,7 +6,7 @@ from bqdm.action import DatasetAction
 from bqdm.model import BigQueryDataset, BigQueryAccessEntry
 
 
-class TestAction(unittest.TestCase):
+class TestDatasetAction(unittest.TestCase):
 
     def test_get_add_datasets(self):
         dataset1 = BigQueryDataset(
