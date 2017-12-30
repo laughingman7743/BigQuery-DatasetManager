@@ -103,8 +103,9 @@ def plan(ctx, conf_dir, detailed_exitcode):
     SchemaMigrationMode.SELECT_INSERT_EMPTY,
     SchemaMigrationMode.DROP_CREATE
 ]), required=True, help=msg.HELP_MIGRATION_MODE)
+@click.option('--backup_dataset', '-b', type=str, required=False, help=msg.HELP_BACKUP_DATASET)
 @click.pass_context
-def apply(ctx, conf_dir, mode):
+def apply(ctx, conf_dir, mode, backup_dataset):
     dataset_action = DatasetAction(ctx.obj['debug'])
     old_datasets = dataset_action.list_datasets()
     new_datasets = list_local_datasets(conf_dir)
@@ -116,7 +117,7 @@ def apply(ctx, conf_dir, mode):
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
     for dataset in new_datasets:
-        table_action = TableAction(dataset.dataset_id, mode, debug=ctx.obj['debug'])
+        table_action = TableAction(dataset.dataset_id, mode, backup_dataset, debug=ctx.obj['debug'])
         old_tables = table_action.list_tables()
         new_tables = list_local_tables(conf_dir, dataset.dataset_id)
         add_table_count += table_action.add(old_tables, new_tables)

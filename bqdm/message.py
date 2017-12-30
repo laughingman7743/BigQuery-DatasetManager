@@ -35,6 +35,9 @@ more granular information about what the resulting plan contains:
 HELP_MIGRATION_MODE = """ TODO
 """
 
+HELP_BACKUP_DATASET = """ TODO
+"""
+
 MESSAGE_PLAN_HEADER = """An execution plan has been generated and is shown below.
 
 Resource actions are indicated with the following symbols:

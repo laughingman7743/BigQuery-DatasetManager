@@ -8,9 +8,10 @@ import sys
 import uuid
 
 import click
+from datetime import datetime
 from future.utils import iteritems
 from google.cloud import bigquery
-from google.cloud.bigquery.job import WriteDisposition, QueryJobConfig
+from google.cloud.bigquery.job import WriteDisposition, QueryJobConfig, CopyJobConfig
 
 from bqdm.dataset import BigQueryDataset
 from bqdm.table import BigQueryTable
@@ -183,18 +184,25 @@ class DatasetAction(object):
 class SchemaMigrationMode(object):
 
     SELECT_INSERT = 'select_insert'
+    SELECT_INSERT_BACKUP = 'select_insert_backup'
     SELECT_INSERT_EMPTY = 'select_insert_empty'
     DROP_CREATE = 'drop_create'
+    DROP_CREATE_BACKUP = 'drop_create_backup'
     DROP_CREATE_EMPTY = 'drop_create_empty'
 
 
 class TableAction(object):
 
-    def __init__(self, dataset_id,
-                 migration_mode=SchemaMigrationMode.SELECT_INSERT, debug=False):
+    def __init__(self, dataset_id, migration_mode=SchemaMigrationMode.SELECT_INSERT,
+                 backup_dataset_id=None, debug=False):
         self.client = bigquery.Client()
         dataset_ref = self.client.dataset(dataset_id)
         self.dataset = self.client.get_dataset(dataset_ref)
+        if backup_dataset_id:
+            backup_dataset_ref = self.client.dataset(backup_dataset_id)
+            self.backup_dataset = self.client.get_dataset(backup_dataset_ref)
+        else:
+            self.backup_dataset = self.dataset
         self.migration_mode = migration_mode
         if debug:
             _logger.setLevel(logging.DEBUG)
@@ -218,13 +226,18 @@ class TableAction(object):
         return len(results), tuple(results)
 
     def migrate(self, source_table, target_table):
-        if self.migration_mode == SchemaMigrationMode.SELECT_INSERT:
+        if self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP or \
+                        self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
+            self.backup(source_table.table_id)
+        if self.migration_mode == SchemaMigrationMode.SELECT_INSERT or \
+                        self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP:
             query_field = self.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
         elif self.migration_mode == SchemaMigrationMode.SELECT_INSERT_EMPTY:
             query_field = self.build_query_field((), target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
-        elif self.migration_mode == SchemaMigrationMode.DROP_CREATE:
+        elif self.migration_mode == SchemaMigrationMode.DROP_CREATE or \
+                        self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
             converted = BigQueryTable.to_table(self.dataset, target_table)
             tmp_table = self.create_temporary_table(target_table)
             query_field = self.build_query_field(source_table.schema, target_table.schema)
@@ -235,33 +248,49 @@ class TableAction(object):
             self.client.create_table(converted)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
             self.client.delete_table(tmp_table)
-        else:
+        elif self.migration_mode == SchemaMigrationMode.DROP_CREATE_EMPTY:
             converted = BigQueryTable.to_table(self.dataset, target_table)
             click.secho('    Dropping... {0}'.format(converted.path), fg='yellow')
             self.client.delete_table(converted)
             click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
             self.client.create_table(converted)
+        else:
+            raise RuntimeError('Unknown migration mode.')
+
+    def backup(self, source_table_id):
+        source_table = self.dataset.table(source_table_id)
+        backup_table_id = 'bk_{source_table_id}_{timestamp}'.format(
+            source_table_id=source_table_id,
+            timestamp=datetime.utcnow().strftime('%Y%m%d%H%M%S%f'))
+        backup_table = self.backup_dataset.table(backup_table_id)
+        job_config = CopyJobConfig()
+        job = self.client.copy_table(source_table, backup_table, job_config=job_config)
+        click.secho('    Backing up... {0}'.format(job.job_id), fg='yellow')
+        job.result()
+        assert job.state == 'DONE'
+        error_result = job.error_result
+        if error_result:
+            raise RuntimeError(job.errors)
 
     def select_insert(self, source_table_id, destination_table_id, query_field):
         query = 'SELECT {query_field} FROM {dataset_id}.{source_table_id}'.format(
             query_field=query_field,
             dataset_id=self.dataset.dataset_id,
             source_table_id=source_table_id)
-
         destination_table = self.dataset.table(destination_table_id)
         job_config = QueryJobConfig()
         job_config.use_legacy_sql = False
         job_config.use_query_cache = False
         job_config.write_disposition = WriteDisposition.WRITE_TRUNCATE
         job_config.destination = destination_table
-        query_job = self.client.query(query, job_config)
-        click.secho('    Inserting... {0}'.format(query_job.job_id), fg='yellow')
-        click.secho('      {0}'.format(query_job.query), fg='yellow')
-        query_job.result()
-        assert query_job.state == 'DONE'
-        error_result = query_job.error_result
+        job = self.client.query(query, job_config)
+        click.secho('    Inserting... {0}'.format(job.job_id), fg='yellow')
+        click.secho('      {0}'.format(job.query), fg='yellow')
+        job.result()
+        assert job.state == 'DONE'
+        error_result = job.error_result
         if error_result:
-            raise RuntimeError(query_job.errors)
+            raise RuntimeError(job.errors)
 
     def build_query_field(self, source_schema, target_schema, prefix=None):
         query_fields = []
