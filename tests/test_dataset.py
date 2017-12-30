@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 import unittest
 
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
 
 
 class TestBigQueryDataset(unittest.TestCase):

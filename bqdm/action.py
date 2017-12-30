@@ -12,7 +12,9 @@ from future.utils import iteritems
 from google.cloud import bigquery
 from google.cloud.bigquery.job import WriteDisposition, QueryJobConfig
 
-from bqdm.model import BigQueryDataset, BigQueryTable, BigQuerySchemaField
+from bqdm.dataset import BigQueryDataset
+from bqdm.table import BigQueryTable
+from bqdm.schema import BigQuerySchemaField
 from bqdm.util import dump_dataset, ndiff
 
 

@@ -12,9 +12,11 @@ from past.types import unicode
 import bqdm.message as msg
 from bqdm import CONTEXT_SETTINGS
 from bqdm.action import DatasetAction, TableAction, SchemaMigrationMode
-from bqdm.model import (BigQueryDataset, BigQueryAccessEntry,
-                        BigQueryTable, BigQuerySchemaField)
+from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
+from bqdm.table import BigQueryTable
+from bqdm.schema import BigQuerySchemaField
 from bqdm.util import list_local_datasets, str_representer, list_local_tables
+
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))

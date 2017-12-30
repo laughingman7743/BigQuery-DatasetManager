@@ -7,7 +7,8 @@ import os
 
 import click
 import yaml
-from bqdm.model import BigQueryDataset, BigQueryTable
+from bqdm.dataset import BigQueryDataset
+from bqdm.table import BigQueryTable
 
 
 def str_representer(dumper, data):

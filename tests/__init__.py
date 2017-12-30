@@ -5,8 +5,9 @@ import yaml
 from past.types import unicode
 
 from bqdm.util import str_representer
-from bqdm.model import (BigQueryDataset, BigQueryAccessEntry,
-                        BigQueryTable, BigQuerySchemaField)
+from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
+from bqdm.table import BigQueryTable
+from bqdm.schema import BigQuerySchemaField
 
 
 yaml.add_representer(str, str_representer)

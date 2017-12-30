@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import unittest
 
 from bqdm.action import DatasetAction
-from bqdm.model import BigQueryDataset, BigQueryAccessEntry
+from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
 
 
 class TestDatasetAction(unittest.TestCase):
