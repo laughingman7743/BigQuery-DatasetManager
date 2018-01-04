@@ -227,17 +227,17 @@ class TableAction(object):
 
     def migrate(self, source_table, target_table):
         if self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP or \
-                        self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
+                self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
             self.backup(source_table.table_id)
         if self.migration_mode == SchemaMigrationMode.SELECT_INSERT or \
-                        self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP:
+                self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP:
             query_field = self.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
         elif self.migration_mode == SchemaMigrationMode.SELECT_INSERT_EMPTY:
             query_field = self.build_query_field((), target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
         elif self.migration_mode == SchemaMigrationMode.DROP_CREATE or \
-                        self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
+                self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
             converted = BigQueryTable.to_table(self.dataset, target_table)
             tmp_table = self.create_temporary_table(target_table)
             query_field = self.build_query_field(source_table.schema, target_table.schema)
