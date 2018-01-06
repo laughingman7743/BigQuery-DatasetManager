@@ -44,11 +44,31 @@ class TestBigQueryDataset(unittest.TestCase):
             None,
             None
         )
+        dataset5 = BigQueryDataset(
+            'test',
+            'foo_bar',
+            'test_description',
+            None,
+            'EU',
+            None,
+            None
+        )
+        dataset6 = BigQueryDataset(
+            'test',
+            'foo_bar',
+            'hoge_fuga',
+            None,
+            'EU',
+            None,
+            None
+        )
 
         self.assertEqual(dataset1, dataset2)
         self.assertNotEqual(dataset1, dataset3)
         self.assertNotEqual(dataset1, dataset4)
         self.assertNotEqual(dataset3, dataset4)
+        self.assertNotEqual(dataset4, dataset5)
+        self.assertNotEqual(dataset5, dataset6)
 
     def test_eq_dataset_with_access_entry(self):
         access_entry1 = BigQueryAccessEntry(
