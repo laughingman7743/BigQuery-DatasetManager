@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import unittest
 
 from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
-from bqdm.util import dump_dataset
+from bqdm.util import dump
 
 
 class TestUtil(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestUtil(unittest.TestCase):
             None,
             None
         )
-        actual_dump_data1 = dump_dataset(dataset1)
+        actual_dump_data1 = dump(dataset1)
         expected_dump_data1 = """dataset_id: test1
 friendly_name: test_friendly_name
 description: test_description
@@ -43,7 +43,7 @@ access_entries: null
             None,
             [access_entry2]
         )
-        actual_dump_data2 = dump_dataset(dataset2)
+        actual_dump_data2 = dump(dataset2)
         expected_dump_data2 = """dataset_id: test2
 friendly_name: test_friendly_name
 description: test_description
@@ -75,7 +75,7 @@ access_entries:
             None,
             [access_entry3]
         )
-        actual_dump_data3 = dump_dataset(dataset3)
+        actual_dump_data3 = dump(dataset3)
         expected_dump_data3 = """dataset_id: test3
 friendly_name: test_friendly_name
 description: test_description
@@ -101,7 +101,7 @@ access_entries:
             None,
             [access_entry2, access_entry3]
         )
-        actual_dump_data4 = dump_dataset(dataset4)
+        actual_dump_data4 = dump(dataset4)
         expected_dump_data4 = """dataset_id: test4
 friendly_name: test_friendly_name
 description: test_description
@@ -133,7 +133,7 @@ access_entries:
             label5,
             None
         )
-        actual_dump_data5 = dump_dataset(dataset5)
+        actual_dump_data5 = dump(dataset5)
         expected_dump_data5 = """dataset_id: test5
 friendly_name: test_friendly_name
 description: test_description
@@ -158,7 +158,7 @@ access_entries: null
             label6,
             None
         )
-        actual_dump_data6 = dump_dataset(dataset6)
+        actual_dump_data6 = dump(dataset6)
         expected_dump_data6 = """dataset_id: test6
 friendly_name: test_friendly_name
 description: test_description

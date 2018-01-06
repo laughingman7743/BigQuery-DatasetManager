@@ -18,7 +18,7 @@ def str_representer(dumper, data):
         return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
-def dump_dataset(data):
+def dump(data):
     return yaml.dump(data, default_flow_style=False, indent=4,
                      allow_unicode=True, canonical=False)
 
@@ -56,5 +56,5 @@ def list_local_tables(conf_dir, dataset_id):
 
 
 def ndiff(source, target):
-    return difflib.ndiff(dump_dataset(source).splitlines(),
-                         dump_dataset(target).splitlines())
+    return difflib.ndiff(dump(source).splitlines(),
+                         dump(target).splitlines())

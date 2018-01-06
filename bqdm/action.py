@@ -16,7 +16,7 @@ from google.cloud.bigquery.job import WriteDisposition, QueryJobConfig, CopyJobC
 from bqdm.dataset import BigQueryDataset
 from bqdm.table import BigQueryTable
 from bqdm.schema import BigQuerySchemaField
-from bqdm.util import dump_dataset, ndiff
+from bqdm.util import dump, ndiff
 
 
 _logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class DatasetAction(object):
 
         datasets = self.list_datasets()
         for dataset in datasets:
-            data = dump_dataset(BigQueryDataset.from_dataset(dataset))
+            data = dump(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id))
             click.echo('Export: {0}'.format(export_path))
@@ -86,7 +86,7 @@ class DatasetAction(object):
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
             click.secho('  + {0}'.format(dataset.dataset_id), fg='green')
-            for line in dump_dataset(dataset).splitlines():
+            for line in dump(dataset).splitlines():
                 click.echo('    {0}'.format(line))
             click.echo()
         return count
@@ -97,7 +97,7 @@ class DatasetAction(object):
         for dataset in datasets:
             converted = BigQueryDataset.to_dataset(self.client, dataset)
             click.secho('  Adding... {0}'.format(converted.path), fg='green')
-            for line in dump_dataset(dataset).splitlines():
+            for line in dump(dataset).splitlines():
                 click.echo('    {0}'.format(line))
             self.client.create_dataset(converted)
             self.client.update_dataset(converted, [
@@ -348,7 +348,7 @@ class TableAction(object):
             if not os.path.exists(keep_file):
                 open(keep_file, 'a').close()
         for table in tables:
-            data = dump_dataset(BigQueryTable.from_table(table))
+            data = dump(BigQueryTable.from_table(table))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(table.table_id))
             click.echo('Export: {0}'.format(export_path))
@@ -362,7 +362,7 @@ class TableAction(object):
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
             click.secho('  + {0}'.format(table.table_id), fg='green')
-            for line in dump_dataset(table).splitlines():
+            for line in dump(table).splitlines():
                 click.echo('    {0}'.format(line))
             click.echo()
         return count
@@ -373,7 +373,7 @@ class TableAction(object):
         for table in tables:
             converted = BigQueryTable.to_table(self.dataset, table)
             click.secho('  Adding... {0}'.format(converted.path), fg='green')
-            for line in dump_dataset(table).splitlines():
+            for line in dump(table).splitlines():
                 click.echo('    {0}'.format(line))
             self.client.create_table(converted)
             click.echo()
