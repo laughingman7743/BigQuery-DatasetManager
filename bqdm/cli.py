@@ -33,8 +33,9 @@ yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--credential_file', '-c', type=click.Path(exists=True), required=False,
-              help=msg.HELP_CREDENTIAL_FILE)
-@click.option('--debug', is_flag=True, default=False, help=msg.HELP_DEBUG)
+              help=msg.HELP_OPTION_CREDENTIAL_FILE)
+@click.option('--debug', is_flag=True, default=False,
+              help=msg.HELP_OPTION_DEBUG)
 @click.pass_context
 def cli(ctx, credential_file, debug):
     ctx.obj = dict()
@@ -47,7 +48,7 @@ def cli(ctx, credential_file, debug):
 
 
 @cli.command(help=msg.HELP_COMMAND_EXPORT)
-@click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OUTPUT_DIR)
+@click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OPTION_OUTPUT_DIR)
 @click.pass_context
 def export(ctx, output_dir):
     dataset_action = DatasetAction(ctx.obj['debug'])
@@ -59,8 +60,9 @@ def export(ctx, output_dir):
 
 @cli.command(help=msg.HELP_COMMAND_PLAN)
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_CONF_DIR)
-@click.option('--detailed_exitcode', is_flag=True, default=False, help=msg.HELP_DETAILED_EXIT_CODE)
+              help=msg.HELP_OPTION_CONF_DIR)
+@click.option('--detailed_exitcode', is_flag=True, default=False,
+              help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan(ctx, conf_dir, detailed_exitcode):
     click.echo(msg.MESSAGE_PLAN_HEADER)
@@ -97,13 +99,14 @@ def plan(ctx, conf_dir, detailed_exitcode):
 
 @cli.command(help=msg.HELP_COMMAND_APPLY)
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_CONF_DIR)
+              help=msg.HELP_OPTION_CONF_DIR)
 @click.option('--mode', '-m', type=click.Choice([
     SchemaMigrationMode.SELECT_INSERT,
     SchemaMigrationMode.SELECT_INSERT_EMPTY,
     SchemaMigrationMode.DROP_CREATE
-]), required=True, help=msg.HELP_MIGRATION_MODE)
-@click.option('--backup_dataset', '-b', type=str, required=False, help=msg.HELP_BACKUP_DATASET)
+]), required=True, help=msg.HELP_OPTION_MIGRATION_MODE)
+@click.option('--backup_dataset', '-b', type=str, required=False,
+              help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
 def apply(ctx, conf_dir, mode, backup_dataset):
     dataset_action = DatasetAction(ctx.obj['debug'])
@@ -142,8 +145,9 @@ def destroy(ctx):
 
 @destroy.command('plan', help=msg.HELP_COMMAND_PLAN_DESTROY)
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_CONF_DIR)
-@click.option('--detailed_exitcode', is_flag=True, default=False, help=msg.HELP_DETAILED_EXIT_CODE)
+              help=msg.HELP_OPTION_CONF_DIR)
+@click.option('--detailed_exitcode', is_flag=True, default=False,
+              help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
     dataset_action = DatasetAction(ctx.obj['debug'])
@@ -164,7 +168,7 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
 
 @destroy.command('apply', help=msg.HELP_COMMAND_APPLY_DESTROY)
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_CONF_DIR)
+              help=msg.HELP_OPTION_CONF_DIR)
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
     dataset_action = DatasetAction(ctx.obj['debug'])
