@@ -262,21 +262,31 @@ See `authentication section`_ in the official documentation of ``google-cloud-py
 Testing
 -------
 
+Depends on the following environment variables:
+
+.. code:: bash
+
+    $ export GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
+    $ export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
+
 Run test
 ~~~~~~~~
 
 .. code:: bash
 
-    $ py.test
+    $ pip install pipenv
+    $ pipenv install --dev
+    $ pipenv run pytest
 
 Run test multiple Python versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
-    $ pip install tox
-    $ pyenv local 2.7.13 3.4.6 3.5.3 3.6.1
-    $ tox
+    $ pip install pipenv
+    $ pipenv install --dev
+    $ pyenv local 3.6.5 3.5.5 3.4.8 2.7.14
+    $ pipenv run tox
 
 TODO
 ----

@@ -30,13 +30,13 @@ setup(
         'future',
         'click>=6.0',
         'PyYAML>=3.12',
-        'google-cloud-bigquery==0.28.0',
+        'google-cloud-bigquery==1.1.0',
+        'enum34;python_version<="3.3"',
     ],
     tests_require=[
-        'pytest',
+        'pytest>=3.5',
         'pytest-cov',
-        'pytest-flake8',
-        'pytest-catchlog',
+        'pytest-flake8>=1.0.1',
     ],
     entry_points={
         'console_scripts': [
