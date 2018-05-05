@@ -79,12 +79,13 @@ def plan(ctx, conf_dir, detailed_exitcode):
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
     for dataset in new_datasets:
-        table_action = TableAction(dataset.dataset_id, debug=ctx.obj['debug'])
-        old_tables = table_action.list_tables()
         new_tables = list_local_tables(conf_dir, dataset.dataset_id)
-        add_table_count += table_action.plan_add(old_tables, new_tables)
-        change_table_count += table_action.plan_change(old_tables, new_tables)
-        destroy_table_count += table_action.plan_destroy(old_tables, new_tables)
+        if new_tables is not None:
+            table_action = TableAction(dataset.dataset_id, debug=ctx.obj['debug'])
+            old_tables = table_action.list_tables()
+            add_table_count += table_action.plan_add(old_tables, new_tables)
+            change_table_count += table_action.plan_change(old_tables, new_tables)
+            destroy_table_count += table_action.plan_destroy(old_tables, new_tables)
 
     # TODO dataset & table summary
     if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
@@ -121,12 +122,14 @@ def apply(ctx, conf_dir, mode, backup_dataset):
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
     for dataset in new_datasets:
-        table_action = TableAction(dataset.dataset_id, mode, backup_dataset, debug=ctx.obj['debug'])
-        old_tables = table_action.list_tables()
         new_tables = list_local_tables(conf_dir, dataset.dataset_id)
-        add_table_count += table_action.add(old_tables, new_tables)
-        change_table_count += table_action.change(old_tables, new_tables)
-        destroy_table_count += table_action.destroy(old_tables, new_tables)
+        if new_tables is not None:
+            table_action = TableAction(dataset.dataset_id, mode,
+                                       backup_dataset, debug=ctx.obj['debug'])
+            old_tables = table_action.list_tables()
+            add_table_count += table_action.add(old_tables, new_tables)
+            change_table_count += table_action.change(old_tables, new_tables)
+            destroy_table_count += table_action.destroy(old_tables, new_tables)
 
     # TODO dataset & table summary
     if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
