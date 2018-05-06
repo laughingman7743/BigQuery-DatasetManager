@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import unittest
 
-from google.cloud.bigquery import AccessEntry, Dataset, DatasetReference
+from google.cloud.bigquery import AccessEntry
 
 from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 from tests.util import make_dataset
