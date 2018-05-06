@@ -28,10 +28,9 @@ class SchemaMigrationMode(Enum):
 
     SELECT_INSERT = 'select_insert'
     SELECT_INSERT_BACKUP = 'select_insert_backup'
-    SELECT_INSERT_EMPTY = 'select_insert_empty'
+    REPLACE = 'replace'
+    REPLACE_BACKUP = 'replace_backup'
     DROP_CREATE = 'drop_create'
-    DROP_CREATE_BACKUP = 'drop_create_backup'
-    DROP_CREATE_EMPTY = 'drop_create_empty'
 
 
 class TableAction(object):
@@ -69,37 +68,34 @@ class TableAction(object):
         return len(results), tuple(results)
 
     def migrate(self, source_table, target_table):
-        if self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP or \
-                self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
+        if self.migration_mode in [SchemaMigrationMode.SELECT_INSERT_BACKUP,
+                                   SchemaMigrationMode.REPLACE_BACKUP]:
             self.backup(source_table.table_id)
 
-        if self.migration_mode == SchemaMigrationMode.SELECT_INSERT or \
-                self.migration_mode == SchemaMigrationMode.SELECT_INSERT_BACKUP:
+        if self.migration_mode in [SchemaMigrationMode.SELECT_INSERT,
+                                   SchemaMigrationMode.SELECT_INSERT_BACKUP]:
             query_field = self.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
-        elif self.migration_mode == SchemaMigrationMode.SELECT_INSERT_EMPTY:
-            query_field = self.build_query_field((), target_table.schema)
-            self.select_insert(target_table.table_id, target_table.table_id, query_field)
-        elif self.migration_mode == SchemaMigrationMode.DROP_CREATE or \
-                self.migration_mode == SchemaMigrationMode.DROP_CREATE_BACKUP:
-            converted = BigQueryTable.to_table(self.dataset, target_table)
+        elif self.migration_mode in [SchemaMigrationMode.REPLACE,
+                                     SchemaMigrationMode.REPLACE_BACKUP]:
             tmp_table = self.create_temporary_table(target_table)
             query_field = self.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
+            converted = BigQueryTable.to_table(self.dataset, target_table)
             click.secho('    Dropping... {0}'.format(converted.path), fg='yellow')
             self.client.delete_table(converted)
             click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
             self.client.create_table(converted)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
             self.client.delete_table(tmp_table)
-        elif self.migration_mode == SchemaMigrationMode.DROP_CREATE_EMPTY:
+        elif self.migration_mode in [SchemaMigrationMode.DROP_CREATE]:
             converted = BigQueryTable.to_table(self.dataset, target_table)
             click.secho('    Dropping... {0}'.format(converted.path), fg='yellow')
             self.client.delete_table(converted)
             click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
             self.client.create_table(converted)
         else:
-            raise RuntimeError('Unknown migration mode.')
+            raise ValueError('Unknown migration mode.')
 
     def backup(self, source_table_id):
         source_table = self.dataset.table(source_table_id)
@@ -166,7 +162,7 @@ class TableAction(object):
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
         converted = BigQueryTable.to_table(self.dataset, model)
-        click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
+        click.secho('    Temporary table creating... {0}'.format(converted.path), fg='yellow')
         self.client.create_table(converted)
         return converted
 
