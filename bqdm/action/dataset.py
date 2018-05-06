@@ -49,22 +49,30 @@ class DatasetAction(object):
         results = [s for s in source if s.dataset_id in dataset_ids]
         return len(results), tuple(results)
 
-    def list_datasets(self):
+    def get_dataset(self, dataset_id):
+        dataset_ref = self.client.dataset(dataset_id)
+        dataset = self.client.get_dataset(dataset_ref)
+        click.echo('Load: ' + dataset.path)
+        return dataset
+
+    def list_datasets(self, dataset_id=None):
         datasets = []
-        for dataset in self.client.list_datasets():
-            dataset_ref = self.client.dataset(dataset.dataset_id)
-            dataset_detail = self.client.get_dataset(dataset_ref)
-            click.echo('Load: ' + dataset_detail.path)
-            datasets.append(BigQueryDataset.from_dataset(dataset_detail))
+        if dataset_id:
+            datasets.append(BigQueryDataset.from_dataset(self.get_dataset(dataset_id)))
+        else:
+            for dataset in self.client.list_datasets():
+                # TODO ThreadPoolExecutor
+                datasets.append(BigQueryDataset.from_dataset(
+                    self.get_dataset(dataset.dataset_id)))
         click.echo('------------------------------------------------------------------------')
         click.echo()
         return datasets
 
-    def export(self, output_dir):
+    def export(self, output_dir, dataset_id=None):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        datasets = self.list_datasets()
+        datasets = self.list_datasets(dataset_id)
         for dataset in datasets:
             data = dump(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
