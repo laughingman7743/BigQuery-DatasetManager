@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import unittest
 
-from google.cloud.bigquery import AccessEntry, Dataset
+from google.cloud.bigquery import AccessEntry, Dataset, DatasetReference
 
 from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 from tests.util import with_client
@@ -542,8 +542,9 @@ class TestBigQueryDataset(unittest.TestCase):
         })
         self.assertNotEqual(expected_dataset3, actual_dataset3_2)
 
-    @with_client
-    def test_from_dataset(self, client):
+    def test_from_dataset(self):
+        project = 'test'
+
         expected_dataset1 = BigQueryDataset(
             'test',
             'test_friendly_name',
@@ -553,7 +554,7 @@ class TestBigQueryDataset(unittest.TestCase):
             None,
             None
         )
-        dataset_ref1_1 = client.dataset('test')
+        dataset_ref1_1 = DatasetReference(project, 'test')
         dataset1_1 = Dataset(dataset_ref1_1)
         dataset1_1.friendly_name = 'test_friendly_name'
         dataset1_1.description = 'test_description'
@@ -561,7 +562,7 @@ class TestBigQueryDataset(unittest.TestCase):
         dataset1_1.location = 'US'
         actual_dataset1_1 = BigQueryDataset.from_dataset(dataset1_1)
         self.assertEqual(expected_dataset1, actual_dataset1_1)
-        dataset_ref1_2 = client.dataset('test')
+        dataset_ref1_2 = DatasetReference(project, 'test')
         dataset1_2 = Dataset(dataset_ref1_2)
         dataset1_2.friendly_name = 'foo_bar'
         dataset1_2.description = 'fizz_buzz'
@@ -585,7 +586,7 @@ class TestBigQueryDataset(unittest.TestCase):
                 ),
             )
         )
-        dataset_ref2_1 = client.dataset('test')
+        dataset_ref2_1 = DatasetReference(project, 'test')
         dataset2_1 = Dataset(dataset_ref2_1)
         dataset2_1.friendly_name = 'test_friendly_name'
         dataset2_1.description = 'test_description'
@@ -594,7 +595,7 @@ class TestBigQueryDataset(unittest.TestCase):
         dataset2_1.access_entries = [AccessEntry('OWNER', 'specialGroup', 'projectOwners')]
         actual_dataset2_1 = BigQueryDataset.from_dataset(dataset2_1)
         self.assertEqual(expected_dataset2, actual_dataset2_1)
-        dataset_ref2_2 = client.dataset('test')
+        dataset_ref2_2 = DatasetReference(project, 'test')
         dataset2_2 = Dataset(dataset_ref2_2)
         dataset2_2.friendly_name = 'test_friendly_name'
         dataset2_2.description = 'test_description'
@@ -619,7 +620,7 @@ class TestBigQueryDataset(unittest.TestCase):
             },
             None
         )
-        dataset_ref3_1 = client.dataset('test')
+        dataset_ref3_1 = DatasetReference(project, 'test')
         dataset3_1 = Dataset(dataset_ref3_1)
         dataset3_1.friendly_name = 'test_friendly_name'
         dataset3_1.description = 'test_description'
@@ -630,7 +631,7 @@ class TestBigQueryDataset(unittest.TestCase):
         }
         actual_dataset3_1 = BigQueryDataset.from_dataset(dataset3_1)
         self.assertEqual(expected_dataset3, actual_dataset3_1)
-        dataset_ref3_2 = client.dataset('test')
+        dataset_ref3_2 = DatasetReference(project, 'test')
         dataset3_2 = Dataset(dataset_ref3_2)
         dataset3_2.friendly_name = 'test_friendly_name'
         dataset3_2.description = 'test_description'
@@ -643,15 +644,16 @@ class TestBigQueryDataset(unittest.TestCase):
         actual_dataset3_2 = BigQueryDataset.from_dataset(dataset3_2)
         self.assertNotEqual(expected_dataset3, actual_dataset3_2)
 
-    @with_client
-    def test_to_dataset(self, client):
-        dataset_ref1 = client.dataset('test')
+    def test_to_dataset(self):
+        project = 'test'
+
+        dataset_ref1 = DatasetReference(project, 'test')
         expected_dataset1 = Dataset(dataset_ref1)
         expected_dataset1.friendly_name = 'test_friendly_name'
         expected_dataset1.description = 'test_description'
         expected_dataset1.default_table_expiration_ms = 24 * 60 * 60 * 1000
         expected_dataset1.location = 'US'
-        actual_dataset1_1 = BigQueryDataset.to_dataset(client, BigQueryDataset(
+        actual_dataset1_1 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
@@ -668,7 +670,7 @@ class TestBigQueryDataset(unittest.TestCase):
         self.assertEqual(expected_dataset1.location, actual_dataset1_1.location)
         self.assertEqual(expected_dataset1.labels, actual_dataset1_1.labels)
         self.assertEqual(expected_dataset1.access_entries, actual_dataset1_1.access_entries)
-        actual_dataset1_2 = BigQueryDataset.to_dataset(client, BigQueryDataset(
+        actual_dataset1_2 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'aaa',
             'foo_bar',
             'fizz_buzz',
@@ -686,7 +688,7 @@ class TestBigQueryDataset(unittest.TestCase):
         self.assertEqual(expected_dataset1.labels, actual_dataset1_2.labels)
         self.assertEqual(expected_dataset1.access_entries, actual_dataset1_2.access_entries)
 
-        dataset_ref2 = client.dataset('test')
+        dataset_ref2 = DatasetReference(project, 'test')
         expected_dataset2 = Dataset(dataset_ref2)
         expected_dataset2.friendly_name = 'test_friendly_name'
         expected_dataset2.description = 'test_description'
@@ -699,7 +701,7 @@ class TestBigQueryDataset(unittest.TestCase):
                 'projectOwners'
             ),
         )
-        actual_dataset2_1 = BigQueryDataset.to_dataset(client, BigQueryDataset(
+        actual_dataset2_1 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
@@ -711,7 +713,7 @@ class TestBigQueryDataset(unittest.TestCase):
             )
         ))
         self.assertEqual(expected_dataset2.access_entries, actual_dataset2_1.access_entries)
-        actual_dataset2_2 = BigQueryDataset.to_dataset(client, BigQueryDataset(
+        actual_dataset2_2 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
@@ -728,7 +730,7 @@ class TestBigQueryDataset(unittest.TestCase):
         ))
         self.assertNotEqual(expected_dataset2.access_entries, actual_dataset2_2.access_entries)
 
-        dataset_ref3 = client.dataset('test')
+        dataset_ref3 = DatasetReference(project, 'test')
         expected_dataset3 = Dataset(dataset_ref3)
         expected_dataset3.friendly_name = 'test_friendly_name'
         expected_dataset3.description = 'test_description'
@@ -737,7 +739,7 @@ class TestBigQueryDataset(unittest.TestCase):
         expected_dataset3.labels = {
             'foo': 'bar'
         }
-        actual_dataset3_1 = BigQueryDataset.to_dataset(BigQueryDataset(
+        actual_dataset3_1 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
@@ -749,7 +751,7 @@ class TestBigQueryDataset(unittest.TestCase):
             None
         ))
         self.assertEqual(expected_dataset3.labels, actual_dataset3_1.labels)
-        actual_dataset3_2 = BigQueryDataset.to_dataset(BigQueryDataset(
+        actual_dataset3_2 = BigQueryDataset.to_dataset(project, BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',

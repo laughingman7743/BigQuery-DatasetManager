@@ -105,14 +105,14 @@ class BigQueryDataset(object):
                                access_entries)
 
     @staticmethod
-    def to_dataset(client, model):
+    def to_dataset(project, model):
         access_entries = model.access_entries
         if access_entries:
             access_entries = tuple(BigQueryAccessEntry.to_access_entry(a)
                                    for a in access_entries)
         else:
             access_entries = ()
-        dataset_ref = client.dataset(model.dataset_id)
+        dataset_ref = DatasetReference(project, model.dataset_id)
         dataset = Dataset(dataset_ref)
         dataset.friendly_name = model.friendly_name
         dataset.description = model.description

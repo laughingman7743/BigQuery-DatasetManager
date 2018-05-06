@@ -157,7 +157,7 @@ class TableAction(object):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
-        table = BigQueryTable.to_table(self.dataset, model)
+        table = BigQueryTable.to_table(self.dataset.reference, model)
         click.secho('    Temporary table creating... {0}'.format(table.path), fg='yellow')
         self.client.create_table(table)
         return tmp_table_model
@@ -194,7 +194,7 @@ class TableAction(object):
         return tables
 
     def _add(self, model):
-        table = BigQueryTable.to_table(self.dataset, model)
+        table = BigQueryTable.to_table(self.dataset.reference, model)
         click.secho('  Adding... {0}'.format(table.path), fg='green')
         echo_dump(model)
         self.client.create_table(table)
@@ -217,7 +217,7 @@ class TableAction(object):
         return count
 
     def _change(self, model, old_model):
-        table = BigQueryTable.to_table(self.dataset, model)
+        table = BigQueryTable.to_table(self.dataset.reference, model)
         click.secho('  Changing... {0}'.format(table.path), fg='yellow')
         echo_ndiff(old_model, model)
         old_labels = old_model.labels
@@ -259,7 +259,7 @@ class TableAction(object):
         return count
 
     def _destroy(self, model):
-        table = BigQueryTable.to_table(self.dataset, model)
+        table = BigQueryTable.to_table(self.dataset.reference, model)
         click.secho('  Destroying... {0}'.format(table.path), fg='red')
         self.client.delete_table(table)
         click.echo()

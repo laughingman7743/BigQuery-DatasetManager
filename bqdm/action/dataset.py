@@ -76,7 +76,7 @@ class DatasetAction(object):
         return datasets
 
     def _add(self, model):
-        dataset = BigQueryDataset.to_dataset(self.client, model)
+        dataset = BigQueryDataset.to_dataset(self.client.project, model)
         click.secho('  Adding... {0}'.format(dataset.path), fg='green')
         echo_dump(model)
         self.client.create_dataset(dataset)
@@ -102,7 +102,7 @@ class DatasetAction(object):
         return count
 
     def _change(self, model, old_model):
-        dataset = BigQueryDataset.to_dataset(self.client, model)
+        dataset = BigQueryDataset.to_dataset(self.client.project, model)
         click.secho('  Changing... {0}'.format(dataset.path), fg='yellow')
         echo_ndiff(old_model, model)
         old_labels = old_model.labels
@@ -140,7 +140,7 @@ class DatasetAction(object):
         return count
 
     def _destroy(self, model):
-        datasetted = BigQueryDataset.to_dataset(self.client, model)
+        datasetted = BigQueryDataset.to_dataset(self.client.project, model)
         click.secho('  Destroying... {0}'.format(datasetted.path), fg='red')
         self.client.delete_dataset(datasetted)
         click.echo()

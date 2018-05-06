@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from google.cloud.bigquery import TableReference
 from google.cloud.bigquery.table import Table
 
 from bqdm.model.schema import BigQuerySchemaField
@@ -59,13 +60,13 @@ class BigQueryTable(object):
             table.labels,)
 
     @staticmethod
-    def to_table(dataset, model):
+    def to_table(dataset_ref, model):
         schema = model.schema
         if schema:
             schema = tuple(BigQuerySchemaField.to_schema_field(s) for s in schema)
         else:
             schema = ()
-        table_ref = dataset.table(model.table_id)
+        table_ref = TableReference(dataset_ref, model.table_id)
         table = Table(table_ref, schema)
         table.friendly_name = model.friendly_name
         table.description = model.description
