@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 from collections import OrderedDict
 
+from google.cloud.bigquery import DatasetReference
 from google.cloud.bigquery.dataset import AccessEntry, Dataset
 
 

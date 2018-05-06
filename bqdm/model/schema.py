@@ -82,7 +82,7 @@ class BigQuerySchemaField(object):
         elif field_type in ['STRING']:
             return 'STRING'
         else:
-            raise RuntimeError('Unknown field type.')
+            raise ValueError('Unknown field type.')
 
     def _key(self):
         return (self.name,

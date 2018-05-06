@@ -4,7 +4,6 @@ from __future__ import absolute_import
 
 import click
 
-
 HELP_COMMAND_EXPORT = 'Export existing datasets into file in YAML format.'
 HELP_COMMAND_PLAN = 'Generate and show an execution plan.'
 HELP_COMMAND_APPLY = 'Builds or changes datasets.'

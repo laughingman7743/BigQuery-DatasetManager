@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import unittest
 
-from bqdm.action import DatasetAction
-from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
+from bqdm.action.dataset import DatasetAction
+from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 
 
 class TestDatasetAction(unittest.TestCase):
@@ -194,17 +195,11 @@ class TestDatasetAction(unittest.TestCase):
         self.assertEqual(actual_count8, 1)
         self.assertEqual(actual_results8, tuple([dataset3_3]))
 
-        source9 = [dataset3_1]
+        source9 = [dataset3_2]
         target9 = [dataset3_3]
         actual_count9, actual_results9 = DatasetAction.get_change_datasets(source9, target9)
         self.assertEqual(actual_count9, 1)
         self.assertEqual(actual_results9, tuple([dataset3_3]))
-
-        source10 = [dataset3_2]
-        target10 = [dataset3_3]
-        actual_count10, actual_results10 = DatasetAction.get_change_datasets(source10, target10)
-        self.assertEqual(actual_count10, 1)
-        self.assertEqual(actual_results10, tuple([dataset3_3]))
 
     def test_get_destroy_datasets(self):
         dataset1_1 = BigQueryDataset(
@@ -367,3 +362,17 @@ class TestDatasetAction(unittest.TestCase):
         actual_count6, actual_results6 = DatasetAction.get_intersection_datasets(source6, target6)
         self.assertEqual(actual_count6, 0)
         self.assertEqual(actual_results6, tuple())
+
+    # TODO
+    # test_plan_add
+    # test_add
+    # test_plan_change
+    # test_change
+    # test_plan_destroy
+    # test_destroy
+    # test_plan_intersection_destroy
+    # test_intersection_destroy
+
+    # TODO
+    # test_list_datasets
+    # test_export

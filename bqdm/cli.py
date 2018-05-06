@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import logging
 import os
 import sys
@@ -11,12 +12,12 @@ from past.types import unicode
 
 import bqdm.message as msg
 from bqdm import CONTEXT_SETTINGS
-from bqdm.action import DatasetAction, TableAction, SchemaMigrationMode
-from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
-from bqdm.table import BigQueryTable
-from bqdm.schema import BigQuerySchemaField
-from bqdm.util import list_local_datasets, str_representer, list_local_tables
-
+from bqdm.action.dataset import DatasetAction
+from bqdm.action.table import SchemaMigrationMode, TableAction
+from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
+from bqdm.model.schema import BigQuerySchemaField
+from bqdm.model.table import BigQueryTable
+from bqdm.util import list_local_datasets, list_local_tables, str_representer
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))

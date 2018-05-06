@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from google.cloud.bigquery.table import Table
 
-from bqdm.schema import BigQuerySchemaField
+from bqdm.model.schema import BigQuerySchemaField
 
 
 class BigQueryTable(object):
@@ -11,6 +11,7 @@ class BigQueryTable(object):
     def __init__(self, table_id, friendly_name, description, expires, location,
                  partitioning_type, view_use_legacy_sql, view_query, schema,
                  labels):
+        # TODO encryption_configuration
         # TODO external_data_configuration
         self.table_id = table_id
         self.friendly_name = friendly_name

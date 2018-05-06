@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import codecs
 import difflib
 import glob
@@ -7,8 +8,8 @@ import os
 
 import click
 import yaml
-from bqdm.dataset import BigQueryDataset
-from bqdm.table import BigQueryTable
+from bqdm.model.dataset import BigQueryDataset
+from bqdm.model.table import BigQueryTable
 
 
 def str_representer(dumper, data):

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import unittest
 
-from bqdm.dataset import BigQueryAccessEntry, BigQueryDataset
+from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 from bqdm.util import dump
 
 
@@ -18,7 +19,6 @@ class TestUtil(unittest.TestCase):
             None,
             None
         )
-        actual_dump_data1 = dump(dataset1)
         expected_dump_data1 = """dataset_id: test1
 friendly_name: test_friendly_name
 description: test_description
@@ -27,7 +27,8 @@ location: US
 labels: null
 access_entries: null
 """
-        self.assertEqual(actual_dump_data1, expected_dump_data1)
+        actual_dump_data1 = dump(dataset1)
+        self.assertEqual(expected_dump_data1, actual_dump_data1)
 
         access_entry2 = BigQueryAccessEntry(
             'OWNER',
@@ -43,7 +44,6 @@ access_entries: null
             None,
             [access_entry2]
         )
-        actual_dump_data2 = dump(dataset2)
         expected_dump_data2 = """dataset_id: test2
 friendly_name: test_friendly_name
 description: test_description
@@ -55,7 +55,8 @@ access_entries:
     entity_type: specialGroup
     entity_id: projectOwners
 """
-        self.assertEqual(actual_dump_data2, expected_dump_data2)
+        actual_dump_data2 = dump(dataset2)
+        self.assertEqual(expected_dump_data2, actual_dump_data2)
 
         access_entry3 = BigQueryAccessEntry(
             None,
@@ -75,7 +76,6 @@ access_entries:
             None,
             [access_entry3]
         )
-        actual_dump_data3 = dump(dataset3)
         expected_dump_data3 = """dataset_id: test3
 friendly_name: test_friendly_name
 description: test_description
@@ -90,7 +90,8 @@ access_entries:
         projectId: test-project
         tableId: test_table
 """
-        self.assertEqual(actual_dump_data3, expected_dump_data3)
+        actual_dump_data3 = dump(dataset3)
+        self.assertEqual(expected_dump_data3, actual_dump_data3)
 
         dataset4 = BigQueryDataset(
             'test4',
@@ -101,7 +102,6 @@ access_entries:
             None,
             [access_entry2, access_entry3]
         )
-        actual_dump_data4 = dump(dataset4)
         expected_dump_data4 = """dataset_id: test4
 friendly_name: test_friendly_name
 description: test_description
@@ -119,7 +119,8 @@ access_entries:
         projectId: test-project
         tableId: test_table
 """
-        self.assertEqual(actual_dump_data4, expected_dump_data4)
+        actual_dump_data4 = dump(dataset4)
+        self.assertEqual(expected_dump_data4, actual_dump_data4)
 
         label5 = {
             'foo': 'bar'
@@ -133,7 +134,6 @@ access_entries:
             label5,
             None
         )
-        actual_dump_data5 = dump(dataset5)
         expected_dump_data5 = """dataset_id: test5
 friendly_name: test_friendly_name
 description: test_description
@@ -143,7 +143,8 @@ labels:
     foo: bar
 access_entries: null
 """
-        self.assertEqual(actual_dump_data5, expected_dump_data5)
+        actual_dump_data5 = dump(dataset5)
+        self.assertEqual(expected_dump_data5, actual_dump_data5)
 
         label6 = {
             'aaa': 'bbb',
@@ -158,7 +159,6 @@ access_entries: null
             label6,
             None
         )
-        actual_dump_data6 = dump(dataset6)
         expected_dump_data6 = """dataset_id: test6
 friendly_name: test_friendly_name
 description: test_description
@@ -169,4 +169,9 @@ labels:
     ccc: ddd
 access_entries: null
 """
-        self.assertEqual(actual_dump_data6, expected_dump_data6)
+        actual_dump_data6 = dump(dataset6)
+        self.assertEqual(expected_dump_data6, actual_dump_data6)
+
+    def test_dump_table(self):
+        # TODO
+        pass
