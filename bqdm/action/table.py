@@ -13,11 +13,12 @@ from enum import Enum
 import click
 from future.utils import iteritems
 from google.cloud import bigquery
-from google.cloud.bigquery.job import CopyJobConfig, QueryJobConfig, WriteDisposition
+from google.cloud.bigquery.job import (CopyJobConfig, CreateDisposition, QueryJobConfig,
+                                       WriteDisposition)
 
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import dump, ndiff
+from bqdm.util import dump, echo_dump, echo_ndiff
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -81,29 +82,24 @@ class TableAction(object):
             tmp_table = self.create_temporary_table(target_table)
             query_field = self.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
-            converted = BigQueryTable.to_table(self.dataset, target_table)
-            click.secho('    Dropping... {0}'.format(converted.path), fg='yellow')
-            self.client.delete_table(converted)
-            click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
-            self.client.create_table(converted)
+            self._destroy(target_table)
+            self._add(target_table)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
-            self.client.delete_table(tmp_table)
+            self._destroy(tmp_table)
         elif self.migration_mode in [SchemaMigrationMode.DROP_CREATE]:
-            converted = BigQueryTable.to_table(self.dataset, target_table)
-            click.secho('    Dropping... {0}'.format(converted.path), fg='yellow')
-            self.client.delete_table(converted)
-            click.secho('    Creating... {0}'.format(converted.path), fg='yellow')
-            self.client.create_table(converted)
+            self._destroy(target_table)
+            self._add(target_table)
         else:
             raise ValueError('Unknown migration mode.')
 
     def backup(self, source_table_id):
         source_table = self.dataset.table(source_table_id)
-        backup_table_id = 'bk_{source_table_id}_{timestamp}'.format(
+        backup_table_id = 'backup_{source_table_id}_{timestamp}'.format(
             source_table_id=source_table_id,
             timestamp=datetime.utcnow().strftime('%Y%m%d%H%M%S%f'))
         backup_table = self.backup_dataset.table(backup_table_id)
         job_config = CopyJobConfig()
+        job_config.create_disposition = CreateDisposition.CREATE_IF_NEEDED
         job = self.client.copy_table(source_table, backup_table, job_config=job_config)
         click.secho('    Backing up... {0}'.format(job.job_id), fg='yellow')
         job.result()
@@ -161,10 +157,10 @@ class TableAction(object):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
-        converted = BigQueryTable.to_table(self.dataset, model)
-        click.secho('    Temporary table creating... {0}'.format(converted.path), fg='yellow')
-        self.client.create_table(converted)
-        return converted
+        table = BigQueryTable.to_table(self.dataset, model)
+        click.secho('    Temporary table creating... {0}'.format(table.path), fg='yellow')
+        self.client.create_table(table)
+        return tmp_table_model
 
     def list_tables(self):
         tables = []
@@ -197,17 +193,19 @@ class TableAction(object):
         click.echo()
         return tables
 
-    def _create(self):
-        # TODO model -> convert -> api call
-        pass
+    def _add(self, model):
+        table = BigQueryTable.to_table(self.dataset, model)
+        click.secho('  Adding... {0}'.format(table.path), fg='green')
+        echo_dump(model)
+        self.client.create_table(table)
+        click.echo()
 
     def plan_add(self, source, target):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
             click.secho('  + {0}'.format(table.table_id), fg='green')
-            for line in dump(table).splitlines():
-                click.echo('    {0}'.format(line))
+            echo_dump(table)
             click.echo()
         return count
 
@@ -215,17 +213,32 @@ class TableAction(object):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
-            converted = BigQueryTable.to_table(self.dataset, table)
-            click.secho('  Adding... {0}'.format(converted.path), fg='green')
-            for line in dump(table).splitlines():
-                click.echo('    {0}'.format(line))
-            self.client.create_table(converted)
-            click.echo()
+            self._add(table)
         return count
 
-    def _update(self):
-        # TODO model -> convert -> api call
-        pass
+    def _change(self, model, old_model):
+        table = BigQueryTable.to_table(self.dataset, model)
+        click.secho('  Changing... {0}'.format(table.path), fg='yellow')
+        echo_ndiff(old_model, model)
+        old_labels = old_model.labels
+        if old_labels:
+            labels = table.labels.copy()
+            for k, v in iteritems(old_labels):
+                if k not in labels.keys():
+                    labels[k] = None
+            table.labels = labels
+        # TODO location change & partitioning_type change
+        if model.schema != old_model.schema:
+            self.migrate(old_model, model)
+        self.client.update_table(table, [
+            'friendly_name',  # TODO updatable field?
+            'description',
+            'expires',
+            'view_use_legacy_sql',  # TODO updatable field?
+            'view_query',
+            'labels',
+        ])
+        click.echo()
 
     def plan_change(self, source, target):
         count, tables = self.get_change_tables(source, target)
@@ -233,8 +246,7 @@ class TableAction(object):
         for table in tables:
             click.secho('  ~ {0}'.format(table.table_id), fg='yellow')
             old_table = next((s for s in source if s.table_id == table.table_id), None)
-            for d in ndiff(old_table, table):
-                click.secho('    {0}'.format(d), fg='yellow')
+            echo_ndiff(old_table, table)
             click.echo()
         return count
 
@@ -242,36 +254,15 @@ class TableAction(object):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
-            converted = BigQueryTable.to_table(self.dataset, table)
             old_table = next((s for s in source if s.table_id == table.table_id), None)
-            diff = ndiff(old_table, table)
-            click.secho('  Changing... {0}'.format(converted.path), fg='yellow')
-            for d in diff:
-                click.secho('    {0}'.format(d), fg='yellow')
-            old_labels = old_table.labels
-            if old_labels:
-                labels = converted.labels.copy()
-                for k, v in iteritems(old_labels):
-                    if k not in labels.keys():
-                        labels[k] = None
-                converted.labels = labels
-            if table.schema != old_table.schema:
-                self.migrate(old_table, table)
-            self.client.update_table(converted, [
-                'friendly_name',
-                'description',
-                'expires',
-                'partitioning_type',
-                'view_use_legacy_sql',
-                'view_query',
-                'labels',
-            ])
-            click.echo()
+            self._change(table, old_table)
         return count
 
-    def _delete(self):
-        # TODO model -> convert -> api call
-        pass
+    def _destroy(self, model):
+        table = BigQueryTable.to_table(self.dataset, model)
+        click.secho('  Destroying... {0}'.format(table.path), fg='red')
+        self.client.delete_table(table)
+        click.echo()
 
     def plan_destroy(self, source, target):
         count, tables = self.get_destroy_tables(source, target)
@@ -285,8 +276,5 @@ class TableAction(object):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
         for table in tables:
-            converted = BigQueryTable.to_table(self.dataset, table)
-            click.secho('  Destroying... {0}'.format(converted.path), fg='red')
-            self.client.delete_table(converted)
-            click.echo()
+            self._destroy(table)
         return count

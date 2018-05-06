@@ -24,6 +24,11 @@ def dump(data):
                      allow_unicode=True, canonical=False)
 
 
+def echo_dump(data):
+    for line in dump(data).splitlines():
+        click.echo('    {0}'.format(line))
+
+
 def list_local_datasets(conf_dir):
     if not os.path.exists(conf_dir):
         raise RuntimeError('Configuration file directory not found.')
@@ -59,3 +64,8 @@ def list_local_tables(conf_dir, dataset_id):
 def ndiff(source, target):
     return difflib.ndiff(dump(source).splitlines(),
                          dump(target).splitlines())
+
+
+def echo_ndiff(source, target, fg='yellow'):
+    for d in ndiff(source, target):
+        click.secho('    {0}'.format(d), fg=fg)

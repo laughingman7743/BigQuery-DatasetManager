@@ -11,7 +11,7 @@ from future.utils import iteritems
 from google.cloud import bigquery
 
 from bqdm.model.dataset import BigQueryDataset
-from bqdm.util import dump, ndiff
+from bqdm.util import dump, echo_dump, echo_ndiff
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -75,17 +75,22 @@ class DatasetAction(object):
         click.echo()
         return datasets
 
-    def _create(self):
-        # TODO model -> convert -> api call
-        pass
+    def _add(self, model):
+        dataset = BigQueryDataset.to_dataset(self.client, model)
+        click.secho('  Adding... {0}'.format(dataset.path), fg='green')
+        echo_dump(model)
+        self.client.create_dataset(dataset)
+        self.client.update_dataset(dataset, [
+            'access_entries'
+        ])
+        click.echo()
 
     def plan_add(self, source, target):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
             click.secho('  + {0}'.format(dataset.dataset_id), fg='green')
-            for line in dump(dataset).splitlines():
-                click.echo('    {0}'.format(line))
+            echo_dump(dataset)
             click.echo()
         return count
 
@@ -93,20 +98,28 @@ class DatasetAction(object):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
-            converted = BigQueryDataset.to_dataset(self.client, dataset)
-            click.secho('  Adding... {0}'.format(converted.path), fg='green')
-            for line in dump(dataset).splitlines():
-                click.echo('    {0}'.format(line))
-            self.client.create_dataset(converted)
-            self.client.update_dataset(converted, [
-                'access_entries'
-            ])
-            click.echo()
+            self._add(dataset)
         return count
 
-    def _update(self):
-        # TODO model -> convert -> api call
-        pass
+    def _change(self, model, old_model):
+        dataset = BigQueryDataset.to_dataset(self.client, model)
+        click.secho('  Changing... {0}'.format(dataset.path), fg='yellow')
+        echo_ndiff(old_model, model)
+        old_labels = old_model.labels
+        if old_labels:
+            labels = dataset.labels.copy()
+            for k, v in iteritems(old_labels):
+                if k not in labels.keys():
+                    labels[k] = None
+            dataset.labels = labels
+        self.client.update_dataset(dataset, [
+            'friendly_name',  # TODO updatable field?
+            'description',
+            'default_table_expiration_ms',
+            'labels',
+            'access_entries'
+        ])
+        click.echo()
 
     def plan_change(self, source, target):
         count, datasets = self.get_change_datasets(source, target)
@@ -114,8 +127,7 @@ class DatasetAction(object):
         for dataset in datasets:
             click.secho('  ~ {0}'.format(dataset.dataset_id), fg='yellow')
             old_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            for d in ndiff(old_dataset, dataset):
-                click.secho('    {0}'.format(d), fg='yellow')
+            echo_ndiff(old_dataset, dataset)
             click.echo()
         return count
 
@@ -123,32 +135,15 @@ class DatasetAction(object):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
-            converted = BigQueryDataset.to_dataset(self.client, dataset)
             old_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            diff = ndiff(old_dataset, dataset)
-            click.secho('  Changing... {0}'.format(converted.path), fg='yellow')
-            for d in diff:
-                click.secho('    {0}'.format(d), fg='yellow')
-            old_labels = old_dataset.labels
-            if old_labels:
-                labels = converted.labels.copy()
-                for k, v in iteritems(old_labels):
-                    if k not in labels.keys():
-                        labels[k] = None
-                converted.labels = labels
-            self.client.update_dataset(converted, [
-                'friendly_name',
-                'description',
-                'default_table_expiration_ms',
-                'labels',
-                'access_entries'
-            ])
-            click.echo()
+            self._change(dataset, old_dataset)
         return count
 
-    def _delete(self):
-        # TODO model -> convert -> api call
-        pass
+    def _destroy(self, model):
+        datasetted = BigQueryDataset.to_dataset(self.client, model)
+        click.secho('  Destroying... {0}'.format(datasetted.path), fg='red')
+        self.client.delete_dataset(datasetted)
+        click.echo()
 
     def plan_destroy(self, source, target):
         count, datasets = self.get_destroy_datasets(source, target)
@@ -162,10 +157,7 @@ class DatasetAction(object):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            converted = BigQueryDataset.to_dataset(self.client, dataset)
-            click.secho('  Destroying... {0}'.format(converted.path), fg='red')
-            self.client.delete_dataset(converted)
-            click.echo()
+            self._destroy(dataset)
         return count
 
     def plan_intersection_destroy(self, source, target):
@@ -180,8 +172,5 @@ class DatasetAction(object):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            converted = BigQueryDataset.to_dataset(self.client, dataset)
-            click.secho('  Destroying... {0}'.format(dataset.dataset_id), fg='red')
-            self.client.delete_dataset(converted)
-            click.echo()
+            self._destroy(dataset)
         return count
