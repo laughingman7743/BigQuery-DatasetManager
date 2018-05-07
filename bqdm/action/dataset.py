@@ -109,14 +109,14 @@ class DatasetAction(object):
             self._add(dataset)
         return count
 
-    def _change(self, model, old_model):
-        dataset = BigQueryDataset.to_dataset(self.client.project, model)
+    def _change(self, source_model, target_model):
+        dataset = BigQueryDataset.to_dataset(self.client.project, target_model)
         click.secho('  Changing... {0}'.format(dataset.path), fg='yellow')
-        echo_ndiff(old_model, model)
-        old_labels = old_model.labels
-        if old_labels:
+        echo_ndiff(source_model, target_model)
+        source_labels = source_model.labels
+        if source_labels:
             labels = dataset.labels.copy()
-            for k, v in iteritems(old_labels):
+            for k, v in iteritems(source_labels):
                 if k not in labels.keys():
                     labels[k] = None
             dataset.labels = labels
@@ -134,8 +134,8 @@ class DatasetAction(object):
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
             click.secho('  ~ {0}'.format(dataset.dataset_id), fg='yellow')
-            old_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            echo_ndiff(old_dataset, dataset)
+            source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
+            echo_ndiff(source_dataset, dataset)
             click.echo()
         return count
 
@@ -143,8 +143,8 @@ class DatasetAction(object):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
-            old_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            self._change(dataset, old_dataset)
+            source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
+            self._change(source_dataset, dataset)
         return count
 
     def _destroy(self, model):

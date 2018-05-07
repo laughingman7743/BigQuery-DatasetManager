@@ -71,23 +71,23 @@ def plan(ctx, conf_dir, detailed_exitcode):
     click.echo(msg.MESSAGE_PLAN_HEADER)
 
     dataset_action = DatasetAction(ctx.obj['debug'])
-    old_datasets = dataset_action.list_datasets()
-    new_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets()
+    target_datasets = list_local_datasets(conf_dir)
 
-    add_dataset_count = dataset_action.plan_add(old_datasets, new_datasets)
-    change_dataset_count = dataset_action.plan_change(old_datasets, new_datasets)
-    destroy_dataset_count = dataset_action.plan_destroy(old_datasets, new_datasets)
+    add_dataset_count = dataset_action.plan_add(source_datasets, target_datasets)
+    change_dataset_count = dataset_action.plan_change(source_datasets, target_datasets)
+    destroy_dataset_count = dataset_action.plan_destroy(source_datasets, target_datasets)
 
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
-    for dataset in new_datasets:
-        new_tables = list_local_tables(conf_dir, dataset.dataset_id)
-        if new_tables is not None:
+    for dataset in target_datasets:
+        target_tables = list_local_tables(conf_dir, dataset.dataset_id)
+        if target_tables is not None:
             table_action = TableAction(dataset.dataset_id, debug=ctx.obj['debug'])
-            old_tables = table_action.list_tables()
-            add_table_count += table_action.plan_add(old_tables, new_tables)
-            change_table_count += table_action.plan_change(old_tables, new_tables)
-            destroy_table_count += table_action.plan_destroy(old_tables, new_tables)
+            source_tables = table_action.list_tables()
+            add_table_count += table_action.plan_add(source_tables, target_tables)
+            change_table_count += table_action.plan_change(source_tables, target_tables)
+            destroy_table_count += table_action.plan_destroy(source_tables, target_tables)
 
     # TODO dataset & table summary
     if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
@@ -116,24 +116,24 @@ def plan(ctx, conf_dir, detailed_exitcode):
 @click.pass_context
 def apply(ctx, conf_dir, mode, backup_dataset):
     dataset_action = DatasetAction(ctx.obj['debug'])
-    old_datasets = dataset_action.list_datasets()
-    new_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets()
+    target_datasets = list_local_datasets(conf_dir)
 
-    add_dataset_count = dataset_action.add(old_datasets, new_datasets)
-    change_dataset_count = dataset_action.change(old_datasets, new_datasets)
-    destroy_dataset_count = dataset_action.destroy(old_datasets, new_datasets)
+    add_dataset_count = dataset_action.add(source_datasets, target_datasets)
+    change_dataset_count = dataset_action.change(source_datasets, target_datasets)
+    destroy_dataset_count = dataset_action.destroy(source_datasets, target_datasets)
 
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
-    for dataset in new_datasets:
-        new_tables = list_local_tables(conf_dir, dataset.dataset_id)
-        if new_tables is not None:
+    for dataset in target_datasets:
+        target_tables = list_local_tables(conf_dir, dataset.dataset_id)
+        if target_tables is not None:
             table_action = TableAction(dataset.dataset_id, mode,
                                        backup_dataset, debug=ctx.obj['debug'])
-            old_tables = table_action.list_tables()
-            add_table_count += table_action.add(old_tables, new_tables)
-            change_table_count += table_action.change(old_tables, new_tables)
-            destroy_table_count += table_action.destroy(old_tables, new_tables)
+            source_tables = table_action.list_tables()
+            add_table_count += table_action.add(source_tables, target_tables)
+            change_table_count += table_action.change(source_tables, target_tables)
+            destroy_table_count += table_action.destroy(source_tables, target_tables)
 
     # TODO dataset & table summary
     if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
@@ -159,11 +159,11 @@ def destroy(ctx):
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
     dataset_action = DatasetAction(ctx.obj['debug'])
-    old_datasets = dataset_action.list_datasets()
-    new_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets()
+    target_datasets = list_local_datasets(conf_dir)
 
     click.echo(msg.MESSAGE_PLAN_HEADER)
-    destroy_count = dataset_action.plan_intersection_destroy(old_datasets, new_datasets)
+    destroy_count = dataset_action.plan_intersection_destroy(source_datasets, target_datasets)
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
@@ -180,10 +180,10 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
     dataset_action = DatasetAction(ctx.obj['debug'])
-    old_datasets = dataset_action.list_datasets()
-    new_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets()
+    target_datasets = list_local_datasets(conf_dir)
 
-    destroy_count = dataset_action.intersection_destroy(old_datasets, new_datasets)
+    destroy_count = dataset_action.intersection_destroy(source_datasets, target_datasets)
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()

@@ -216,20 +216,20 @@ class TableAction(object):
             self._add(table)
         return count
 
-    def _change(self, model, old_model):
-        table = BigQueryTable.to_table(self.dataset.reference, model)
+    def _change(self, source_model, target_model):
+        table = BigQueryTable.to_table(self.dataset.reference, target_model)
         click.secho('  Changing... {0}'.format(table.path), fg='yellow')
-        echo_ndiff(old_model, model)
-        old_labels = old_model.labels
-        if old_labels:
+        echo_ndiff(source_model, target_model)
+        source_labels = source_model.labels
+        if source_labels:
             labels = table.labels.copy()
-            for k, v in iteritems(old_labels):
+            for k, v in iteritems(source_labels):
                 if k not in labels.keys():
                     labels[k] = None
             table.labels = labels
         # TODO location change & partitioning_type change
-        if model.schema != old_model.schema:
-            self.migrate(old_model, model)
+        if target_model.schema != source_model.schema:
+            self.migrate(source_model, target_model)
         self.client.update_table(table, [
             'friendly_name',  # TODO updatable field?
             'description',
@@ -245,8 +245,8 @@ class TableAction(object):
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
             click.secho('  ~ {0}'.format(table.table_id), fg='yellow')
-            old_table = next((s for s in source if s.table_id == table.table_id), None)
-            echo_ndiff(old_table, table)
+            source_table = next((s for s in source if s.table_id == table.table_id), None)
+            echo_ndiff(source_table, table)
             click.echo()
         return count
 
@@ -254,8 +254,8 @@ class TableAction(object):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
-            old_table = next((s for s in source if s.table_id == table.table_id), None)
-            self._change(table, old_table)
+            source_table = next((s for s in source if s.table_id == table.table_id), None)
+            self._change(source_table, table)
         return count
 
     def _destroy(self, model):
