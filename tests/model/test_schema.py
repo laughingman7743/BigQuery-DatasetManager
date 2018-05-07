@@ -92,8 +92,10 @@ class TestBigQuerySchemaField(unittest.TestCase):
             fields=[schema_field2_1, schema_field1_1]
         )
         self.assertNotEqual(schema_field4_1, schema_field4_2)
+        self.assertNotEqual(schema_field4_1, schema_field4_3)
+        self.assertNotEqual(schema_field4_1, schema_field4_4)
         self.assertEqual(schema_field4_2, schema_field4_3)
-        self.assertNotEqual(schema_field4_2, schema_field4_4)
+        self.assertEqual(schema_field4_2, schema_field4_4)
 
     def test_from_dict(self):
         expected_schema_field1 = BigQuerySchemaField(
@@ -106,16 +108,14 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'name': 'test',
             'field_type': 'STRING',
             'mode': 'NULLABLE',
-            'description': 'test_description',
-            'fields': None
+            'description': 'test_description'
         })
         self.assertEqual(expected_schema_field1, actual_schema_field1_1)
         actual_schema_field1_2 = BigQuerySchemaField.from_dict({
             'name': 'test',
             'field_type': 'INTEGER',
             'mode': 'REQUIRED',
-            'description': 'foo_bar',
-            'fields': None
+            'description': 'foo_bar'
         })
         self.assertNotEqual(expected_schema_field1, actual_schema_field1_2)
 
@@ -131,7 +131,14 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'field_type': 'RECORD',
             'mode': 'NULLABLE',
             'description': 'test_description',
-            'fields': [actual_schema_field1_1]
+            'fields': [
+                {
+                    'name': 'test',
+                    'field_type': 'STRING',
+                    'mode': 'NULLABLE',
+                    'description': 'test_description'
+                }
+            ]
         })
         self.assertEqual(expected_schema_field2, actual_schema_field2_1)
         actual_schema_field2_2 = BigQuerySchemaField.from_dict({
@@ -139,7 +146,14 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'field_type': 'RECORD',
             'mode': 'NULLABLE',
             'description': 'test_description',
-            'fields': [actual_schema_field1_2]
+            'fields': [
+                {
+                    'name': 'test',
+                    'field_type': 'INTEGER',
+                    'mode': 'REQUIRED',
+                    'description': 'foo_bar'
+                }
+            ]
         })
         self.assertNotEqual(expected_schema_field2, actual_schema_field2_2)
 
@@ -216,4 +230,4 @@ class TestBigQuerySchemaField(unittest.TestCase):
         self.assertEqual('TIME', BigQuerySchemaField.normalize_field_type('TIME'))
         self.assertEqual('TIMESTAMP', BigQuerySchemaField.normalize_field_type('TIMESTAMP'))
         self.assertEqual('STRING', BigQuerySchemaField.normalize_field_type('STRING'))
-        self.assertRaises(ValueError, BigQuerySchemaField.normalize_field_type('DECIMAL'))
+        self.assertRaises(ValueError, lambda: BigQuerySchemaField.normalize_field_type('DECIMAL'))

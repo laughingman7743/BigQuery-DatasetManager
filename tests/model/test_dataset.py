@@ -140,7 +140,7 @@ class TestBigQueryAccessEntry(unittest.TestCase):
         actual_access_entry1_1 = BigQueryAccessEntry.from_access_entry(
             AccessEntry('OWNER', 'specialGroup', 'projectOwners'))
         self.assertEqual(expected_access_entry1, actual_access_entry1_1)
-        actual_access_entry1_2 = BigQueryAccessEntry.from_dict(
+        actual_access_entry1_2 = BigQueryAccessEntry.from_access_entry(
             AccessEntry('WRITER', 'specialGroup', 'projectWriters'))
         self.assertNotEqual(expected_access_entry1, actual_access_entry1_2)
 
@@ -361,7 +361,7 @@ class TestBigQueryDataset(unittest.TestCase):
             'foo': 'bar'
         }
         label2 = {
-            'foo': 'bar'
+            'fizz': 'buzz'
         }
 
         dataset7_1 = BigQueryDataset(
@@ -625,6 +625,7 @@ class TestBigQueryDataset(unittest.TestCase):
 
         expected_dataset1 = make_dataset(
             project=project,
+            dataset_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
             default_table_expiration_ms=24 * 60 * 60 * 1000,
