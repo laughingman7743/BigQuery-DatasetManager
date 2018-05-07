@@ -15,7 +15,7 @@ matrix:
 install:
   - "pip install tox codecov"
 before_script:
-  - echo ${GOOGLE_APPLICATION_CREDENTIALS} | base64 -d | credential.json
+  - echo ${GOOGLE_APPLICATION_CREDENTIALS} | base64 -d > credential.json
   - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/credential.json
 script:
   - tox
