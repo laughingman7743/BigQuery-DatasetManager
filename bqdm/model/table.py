@@ -45,9 +45,8 @@ class BigQueryTable(object):
 
     @staticmethod
     def from_table(table):
-        schema = table.schema
-        if schema:
-            schema = tuple(BigQuerySchemaField.from_schema_field(s) for s in schema)
+        schema = tuple(BigQuerySchemaField.from_schema_field(s)
+                       for s in table.schema) if table.schema else None
         return BigQueryTable(
             table_id=table.table_id,
             friendly_name=table.friendly_name,

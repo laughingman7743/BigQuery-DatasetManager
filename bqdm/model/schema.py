@@ -16,7 +16,7 @@ class BigQuerySchemaField(object):
 
     @staticmethod
     def from_dict(value):
-        fields = value.get('fields', ())
+        fields = value.get('fields', None)
         if fields:
             fields = tuple(BigQuerySchemaField.from_dict(f) for f in fields)
         return BigQuerySchemaField(
@@ -28,9 +28,8 @@ class BigQuerySchemaField(object):
 
     @staticmethod
     def from_schema_field(schema_field):
-        fields = schema_field.fields
-        if fields:
-            fields = tuple(BigQuerySchemaField.from_schema_field(f) for f in fields)
+        fields = tuple(BigQuerySchemaField.from_schema_field(f)
+                       for f in schema_field.fields) if schema_field.fields else None
         return BigQuerySchemaField(
             name=schema_field.name,
             field_type=schema_field.field_type,

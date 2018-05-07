@@ -93,10 +93,8 @@ class BigQueryDataset(object):
 
     @staticmethod
     def from_dataset(dataset):
-        access_entries = dataset.access_entries
-        if access_entries:
-            access_entries = tuple(BigQueryAccessEntry.from_access_entry(a)
-                                   for a in access_entries)
+        access_entries = tuple(BigQueryAccessEntry.from_access_entry(a)
+                               for a in dataset.access_entries) if dataset.access_entries else None
         return BigQueryDataset(
             dataset_id=dataset.dataset_id,
             friendly_name=dataset.friendly_name,
