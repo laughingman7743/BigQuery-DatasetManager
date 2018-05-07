@@ -75,12 +75,12 @@ class TableAction(object):
 
         if self.migration_mode in [SchemaMigrationMode.SELECT_INSERT,
                                    SchemaMigrationMode.SELECT_INSERT_BACKUP]:
-            query_field = self.build_query_field(source_table.schema, target_table.schema)
+            query_field = TableAction.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
         elif self.migration_mode in [SchemaMigrationMode.REPLACE,
                                      SchemaMigrationMode.REPLACE_BACKUP]:
             tmp_table = self.create_temporary_table(target_table)
-            query_field = self.build_query_field(source_table.schema, target_table.schema)
+            query_field = TableAction.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
             self._destroy(target_table)
             self._add(target_table)
@@ -128,15 +128,18 @@ class TableAction(object):
         if error_result:
             raise RuntimeError(job.errors)
 
-    def build_query_field(self, source_schema, target_schema, prefix=None):
+    @staticmethod
+    def build_query_field(source_schema, target_schema, prefix=None):
         query_fields = []
         for target in target_schema:
             source = next((s for s in source_schema if s.name == target.name), None)
             if source:
                 if target.field_type == 'RECORD':
-                    field_prefix = '{0}.{1}'.format(prefix, target.name) if prefix else target.name
-                    fields = self.build_query_field(source.fields, target.fields, field_prefix)
-                    query_fields.append('struct({fields}) as {alias}'.format(
+                    field_prefix = '{0}.{1}'.format(
+                        prefix, target.name) if prefix else target.name
+                    fields = TableAction.build_query_field(source.fields, target.fields,
+                                                           field_prefix)
+                    query_fields.append('struct({fields}) AS {alias}'.format(
                         fields=fields, alias=target.name))
                 else:
                     name = '{0}.{1}'.format(prefix, target.name) if prefix else target.name
@@ -145,9 +148,11 @@ class TableAction(object):
                         name=name, type=field_type, alias=target.name))
             else:
                 if target.field_type == 'RECORD':
-                    field_prefix = '{0}.{1}'.format(prefix, target.name) if prefix else target.name
-                    fields = self.build_query_field((), target.fields, field_prefix)
-                    query_fields.append('struct({fields}) as {alias}'.format(
+                    field_prefix = '{0}.{1}'.format(
+                        prefix, target.name) if prefix else target.name
+                    fields = TableAction.build_query_field((), target.fields,
+                                                           field_prefix)
+                    query_fields.append('struct({fields}) AS {alias}'.format(
                         fields=fields, alias=target.name))
                 else:
                     query_fields.append('null AS {alias}'.format(alias=target.name))
