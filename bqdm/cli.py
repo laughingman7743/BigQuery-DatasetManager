@@ -104,7 +104,9 @@ def plan(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_OPTION_CONF_DIR)
 @click.option('--mode', '-m', type=click.Choice([
     SchemaMigrationMode.SELECT_INSERT,
-    SchemaMigrationMode.SELECT_INSERT_EMPTY,
+    SchemaMigrationMode.SELECT_INSERT_BACKUP,
+    SchemaMigrationMode.REPLACE,
+    SchemaMigrationMode.REPLACE_BACKUP,
     SchemaMigrationMode.DROP_CREATE
 ]), required=True, help=msg.HELP_OPTION_MIGRATION_MODE)
 @click.option('--backup_dataset', '-b', type=str, required=False,
