@@ -28,10 +28,12 @@ setup(
     },
     install_requires=[
         'future',
+        'pytz',
         'click>=6.0',
         'PyYAML>=3.12',
         'google-cloud-bigquery==1.1.0',
         'enum34;python_version<="3.3"',
+        'python-dateutil>=2.7.0',
     ],
     tests_require=[
         'pytest>=3.5',

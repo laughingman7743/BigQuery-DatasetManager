@@ -5,6 +5,7 @@ import codecs
 import difflib
 import glob
 import os
+from dateutil.parser import parse
 
 import click
 import yaml
@@ -73,3 +74,7 @@ def ndiff(source, target):
 def echo_ndiff(source, target, fg='yellow'):
     for d in ndiff(source, target):
         click.secho('    {0}'.format(d), fg=fg)
+
+
+def parse_expires(value):
+    return parse(value)

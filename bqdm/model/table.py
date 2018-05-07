@@ -5,6 +5,7 @@ from google.cloud.bigquery import TableReference
 from google.cloud.bigquery.table import Table
 
 from bqdm.model.schema import BigQuerySchemaField
+from bqdm.util import parse_expires
 
 
 class BigQueryTable(object):
@@ -31,11 +32,14 @@ class BigQueryTable(object):
         schema = value.get('schema', None)
         if schema:
             schema = tuple(BigQuerySchemaField.from_dict(s) for s in schema)
+        expires = value.get('expires', None)
+        if expires:
+            expires = parse_expires(expires)
         return BigQueryTable(
             table_id=value.get('table_id', None),
             friendly_name=value.get('friendly_name', None),
             description=value.get('description', None),
-            expires=value.get('expires', None),
+            expires=expires,
             location=value.get('location', None),
             partitioning_type=value.get('partitioning_type', None),
             view_use_legacy_sql=value.get('view_use_legacy_sql', None),
@@ -88,7 +92,8 @@ class BigQueryTable(object):
                 ('table_id', data.table_id),
                 ('friendly_name', data.friendly_name),
                 ('description', data.description),
-                ('expires', data.expires),
+                ('expires', data.expires.strftime(
+                    '%Y-%m-%dT%H:%M:%S.%f%z') if data.expires else data.expires),
                 ('location', data.location),
                 ('partitioning_type', data.partitioning_type),
                 ('view_use_legacy_sql', data.view_use_legacy_sql),
