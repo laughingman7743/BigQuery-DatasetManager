@@ -9,6 +9,7 @@ import sys
 import click
 from future.utils import iteritems
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 from bqdm.model.dataset import BigQueryDataset
 from bqdm.util import dump, echo_dump, echo_ndiff
@@ -20,8 +21,11 @@ _logger.setLevel(logging.INFO)
 
 class DatasetAction(object):
 
-    def __init__(self, debug=False):
-        self.client = bigquery.Client()
+    def __init__(self, project=None, credential_file=None, debug=False):
+        credentials = None
+        if credential_file:
+            credentials = service_account.Credentials.from_service_account_file(credential_file)
+        self.client = bigquery.Client(project, credentials)
         if debug:
             _logger.setLevel(logging.DEBUG)
 

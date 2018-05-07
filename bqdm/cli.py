@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 
 import logging
-import os
 import sys
 
 import click
@@ -37,14 +36,15 @@ yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('--credential_file', '-c', type=click.Path(exists=True), required=False,
               help=msg.HELP_OPTION_CREDENTIAL_FILE)
+@click.option('--project', '-p', type=str, required=False,
+              help=msg.HELP_OPTION_PROJECT)
 @click.option('--debug', is_flag=True, default=False,
               help=msg.HELP_OPTION_DEBUG)
 @click.pass_context
-def cli(ctx, credential_file, debug):
+def cli(ctx, credential_file, project, debug):
     ctx.obj = dict()
     ctx.obj['credential_file'] = credential_file
-    if credential_file:
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_file
+    ctx.obj['project'] = project
     ctx.obj['debug'] = debug
     if debug:
         _logger.setLevel(logging.DEBUG)
@@ -54,10 +54,14 @@ def cli(ctx, credential_file, debug):
 @click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OPTION_OUTPUT_DIR)
 @click.pass_context
 def export(ctx, output_dir):
-    dataset_action = DatasetAction(ctx.obj['debug'])
+    dataset_action = DatasetAction(ctx.obj['credential_file'],
+                                   ctx.obj['project'],
+                                   ctx.obj['debug'])
     datasets = dataset_action.export(output_dir)
     for dataset in datasets:
-        table_action = TableAction(dataset.dataset_id)
+        table_action = TableAction(dataset.dataset_id,
+                                   credential_file=ctx.obj['credential_file'],
+                                   project=ctx.obj['project'])
         table_action.export(output_dir)
 
 
@@ -70,7 +74,9 @@ def export(ctx, output_dir):
 def plan(ctx, conf_dir, detailed_exitcode):
     click.echo(msg.MESSAGE_PLAN_HEADER)
 
-    dataset_action = DatasetAction(ctx.obj['debug'])
+    dataset_action = DatasetAction(ctx.obj['credential_file'],
+                                   ctx.obj['project'],
+                                   ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -83,7 +89,10 @@ def plan(ctx, conf_dir, detailed_exitcode):
     for dataset in target_datasets:
         target_tables = list_local_tables(conf_dir, dataset.dataset_id)
         if target_tables is not None:
-            table_action = TableAction(dataset.dataset_id, debug=ctx.obj['debug'])
+            table_action = TableAction(dataset.dataset_id,
+                                       credential_file=ctx.obj['credential_file'],
+                                       project=ctx.obj['project'],
+                                       debug=ctx.obj['debug'])
             source_tables = table_action.list_tables()
             add_table_count += table_action.plan_add(source_tables, target_tables)
             change_table_count += table_action.plan_change(source_tables, target_tables)
@@ -115,7 +124,9 @@ def plan(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
 def apply(ctx, conf_dir, mode, backup_dataset):
-    dataset_action = DatasetAction(ctx.obj['debug'])
+    dataset_action = DatasetAction(ctx.obj['credential_file'],
+                                   ctx.obj['project'],
+                                   ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -128,8 +139,10 @@ def apply(ctx, conf_dir, mode, backup_dataset):
     for dataset in target_datasets:
         target_tables = list_local_tables(conf_dir, dataset.dataset_id)
         if target_tables is not None:
-            table_action = TableAction(dataset.dataset_id, mode,
-                                       backup_dataset, debug=ctx.obj['debug'])
+            table_action = TableAction(dataset.dataset_id, mode, backup_dataset,
+                                       credential_file=ctx.obj['credential_file'],
+                                       project=ctx.obj['project'],
+                                       debug=ctx.obj['debug'])
             source_tables = table_action.list_tables()
             add_table_count += table_action.add(source_tables, target_tables)
             change_table_count += table_action.change(source_tables, target_tables)
@@ -158,7 +171,9 @@ def destroy(ctx):
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
-    dataset_action = DatasetAction(ctx.obj['debug'])
+    dataset_action = DatasetAction(ctx.obj['credential_file'],
+                                   ctx.obj['project'],
+                                   ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -179,7 +194,9 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_OPTION_CONF_DIR)
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
-    dataset_action = DatasetAction(ctx.obj['debug'])
+    dataset_action = DatasetAction(ctx.obj['credential_file'],
+                                   ctx.obj['project'],
+                                   ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 

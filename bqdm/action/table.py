@@ -15,6 +15,7 @@ from future.utils import iteritems
 from google.cloud import bigquery
 from google.cloud.bigquery.job import (CopyJobConfig, CreateDisposition, QueryJobConfig,
                                        WriteDisposition)
+from google.oauth2 import service_account
 
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
@@ -37,8 +38,11 @@ class SchemaMigrationMode(Enum):
 class TableAction(object):
 
     def __init__(self, dataset_id, migration_mode=SchemaMigrationMode.SELECT_INSERT,
-                 backup_dataset_id=None, debug=False):
-        self.client = bigquery.Client()
+                 backup_dataset_id=None, project=None, credential_file=None, debug=False):
+        credentials = None
+        if credential_file:
+            credentials = service_account.Credentials.from_service_account_file(credential_file)
+        self.client = bigquery.Client(project, credentials)
         dataset_ref = self.client.dataset(dataset_id)
         self.dataset = self.client.get_dataset(dataset_ref)
         if backup_dataset_id:
