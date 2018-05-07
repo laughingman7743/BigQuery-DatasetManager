@@ -36,8 +36,10 @@ def make_dataset(project, dataset_id, friendly_name=None, description=None,
     dataset.description = description
     dataset.default_table_expiration_ms = default_table_expiration_ms
     dataset.location = location
-    dataset.labels = labels
-    dataset.access_entries = access_entries
+    if labels is not None:
+        dataset.labels = labels
+    if access_entries is not None:
+        dataset.access_entries = access_entries
     return dataset
 
 
@@ -54,7 +56,9 @@ def make_table(project, dataset_id, table_id, friendly_name=None, description=No
     table.partitioning_type = partitioning_type
     if view_use_legacy_sql is not None:
         table.view_use_legacy_sql = view_use_legacy_sql
-    table.view_query = view_query
+    if view_query is not None:
+        table.view_query = view_query
     table.schema = schema
-    table.labels = labels
+    if labels is not None:
+        table.labels = labels
     return table
