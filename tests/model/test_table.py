@@ -544,7 +544,8 @@ class TestBigQueryTable(unittest.TestCase):
             partitioning_type='DAY'
         ))
         self.assertEqual(expected_table2.expires, actual_table2_1.expires)
-        self.assertEqual(expected_table2.partitioning_type, actual_table2_1.partitioning_type)
+        self.assertEqual(expected_table2.partitioning_type,
+                         actual_table2_1.partitioning_type)
         actual_table2_2 = BigQueryTable.to_table(dataset_ref, BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
@@ -554,7 +555,8 @@ class TestBigQueryTable(unittest.TestCase):
             partitioning_type=None
         ))
         self.assertNotEqual(expected_table2.expires, actual_table2_2.expires)
-        self.assertNotEqual(expected_table2.partitioning_type, actual_table2_2.partitioning_type)
+        self.assertNotEqual(expected_table2.partitioning_type,
+                            actual_table2_2.partitioning_type)
 
         expected_table3 = make_table(
             project=project,
@@ -572,7 +574,8 @@ class TestBigQueryTable(unittest.TestCase):
             view_use_legacy_sql=False,
             view_query='SELECT * FROM bigquery_datasetmanager.test.test'
         ))
-        self.assertEqual(expected_table3.view_use_legacy_sql, actual_table3_1.view_use_legacy_sql)
+        self.assertEqual(expected_table3.view_use_legacy_sql,
+                         actual_table3_1.view_use_legacy_sql)
         self.assertEqual(expected_table3.view_query, actual_table3_1.view_query)
         actual_table3_2 = BigQueryTable.to_table(dataset_ref, BigQueryTable(
             table_id='test',
@@ -581,7 +584,8 @@ class TestBigQueryTable(unittest.TestCase):
             view_use_legacy_sql=True,
             view_query='SELECT * FROM bigquery_datasetmanager.foo.bar'
         ))
-        self.assertNotEqual(expected_table3.view_use_legacy_sql, actual_table3_2.view_use_legacy_sql)
+        self.assertNotEqual(expected_table3.view_use_legacy_sql,
+                            actual_table3_2.view_use_legacy_sql)
         self.assertNotEqual(expected_table3.view_query, actual_table3_2.view_query)
 
         expected_table4 = make_table(
