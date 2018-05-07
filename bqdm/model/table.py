@@ -21,14 +21,14 @@ class BigQueryTable(object):
         self.partitioning_type = partitioning_type
         self.view_use_legacy_sql = view_use_legacy_sql
         self.view_query = view_query
-        self.schema = schema if schema else None
+        self.schema = tuple(schema) if schema else None
         self.labels = labels if labels else None
 
     @staticmethod
     def from_dict(value):
         schema = value.get('schema', None)
         if schema:
-            schema = [BigQuerySchemaField.from_dict(s) for s in schema]
+            schema = tuple(BigQuerySchemaField.from_dict(s) for s in schema)
         return BigQueryTable(
             value.get('table_id', None),
             value.get('friendly_name', None),
@@ -45,7 +45,7 @@ class BigQueryTable(object):
     def from_table(table):
         schema = table.schema
         if schema:
-            schema = [BigQuerySchemaField.from_schema_field(s) for s in schema]
+            schema = tuple(BigQuerySchemaField.from_schema_field(s) for s in schema)
         return BigQueryTable(
             table.table_id,
             table.friendly_name,
@@ -62,7 +62,7 @@ class BigQueryTable(object):
     def to_table(dataset, model):
         schema = model.schema
         if schema:
-            schema = [BigQuerySchemaField.to_schema_field(s) for s in schema]
+            schema = tuple(BigQuerySchemaField.to_schema_field(s) for s in schema)
         else:
             schema = ()
         table_ref = dataset.table(model.table_id)

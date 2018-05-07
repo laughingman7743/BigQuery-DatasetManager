@@ -74,13 +74,14 @@ class BigQueryDataset(object):
         self.default_table_expiration_ms = default_table_expiration_ms
         self.location = location
         self.labels = labels if labels else None
-        self.access_entries = access_entries if access_entries else None
+        self.access_entries = tuple(access_entries) if access_entries else None
 
     @staticmethod
     def from_dict(value):
         access_entries = value.get('access_entries', None)
         if access_entries:
-            access_entries = [BigQueryAccessEntry.from_dict(a) for a in access_entries]
+            access_entries = tuple(BigQueryAccessEntry.from_dict(a)
+                                   for a in access_entries)
         return BigQueryDataset(value.get('dataset_id', None),
                                value.get('friendly_name', None),
                                value.get('description', None),
@@ -93,7 +94,8 @@ class BigQueryDataset(object):
     def from_dataset(dataset):
         access_entries = dataset.access_entries
         if access_entries:
-            access_entries = [BigQueryAccessEntry.from_access_entry(a) for a in access_entries]
+            access_entries = tuple(BigQueryAccessEntry.from_access_entry(a)
+                                   for a in access_entries)
         return BigQueryDataset(dataset.dataset_id,
                                dataset.friendly_name,
                                dataset.description,
@@ -106,7 +108,8 @@ class BigQueryDataset(object):
     def to_dataset(client, model):
         access_entries = model.access_entries
         if access_entries:
-            access_entries = [BigQueryAccessEntry.to_access_entry(a) for a in access_entries]
+            access_entries = tuple(BigQueryAccessEntry.to_access_entry(a)
+                                   for a in access_entries)
         else:
             access_entries = ()
         dataset_ref = client.dataset(model.dataset_id)

@@ -273,65 +273,47 @@ class TestBigQueryDataset(unittest.TestCase):
             }
         )
 
-        dataset_with_access_entry1_1 = BigQueryDataset(
+        dataset3_1 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry1]
+            (access_entry1, )
         )
-        dataset_with_access_entry1_2 = BigQueryDataset(
+        dataset3_2 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry1]
+            (access_entry1, )
         )
-        self.assertEqual(dataset_with_access_entry1_1, dataset_with_access_entry1_2)
+        self.assertEqual(dataset3_1, dataset3_2)
 
-        dataset_with_access_entry2_1 = BigQueryDataset(
+        dataset4_1 = BigQueryDataset(
             'test',
             'test_friendly_name',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry1]
+            (access_entry1, )
         )
-        dataset_with_access_entry2_2 = BigQueryDataset(
+        dataset4_2 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry2]
+            (access_entry2, )
         )
-        self.assertNotEqual(dataset_with_access_entry2_1, dataset_with_access_entry2_2)
+        self.assertNotEqual(dataset4_1, dataset4_2)
 
-        dataset_with_access_entry3_1 = BigQueryDataset(
-            'foo',
-            'bar',
-            'test_description',
-            24 * 60 * 60 * 1000,
-            'US',
-            None,
-            [access_entry1, access_entry2]
-        )
-        dataset_with_access_entry3_2 = BigQueryDataset(
-            'foo',
-            'bar',
-            'test_description',
-            24 * 60 * 60 * 1000,
-            'US',
-            None,
-            [access_entry2, access_entry1]
-        )
-        dataset_with_access_entry3_3 = BigQueryDataset(
+        dataset5_1 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -340,11 +322,16 @@ class TestBigQueryDataset(unittest.TestCase):
             None,
             (access_entry1, access_entry2)
         )
-        self.assertEqual(dataset_with_access_entry3_1, dataset_with_access_entry3_2)
-        self.assertEqual(dataset_with_access_entry3_1, dataset_with_access_entry3_3)
-        self.assertEqual(dataset_with_access_entry3_2, dataset_with_access_entry3_3)
-
-        dataset_with_access_entry4_1 = BigQueryDataset(
+        dataset5_2 = BigQueryDataset(
+            'foo',
+            'bar',
+            'test_description',
+            24 * 60 * 60 * 1000,
+            'US',
+            None,
+            (access_entry2, access_entry1)
+        )
+        dataset5_3 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -353,27 +340,40 @@ class TestBigQueryDataset(unittest.TestCase):
             None,
             [access_entry1, access_entry2]
         )
-        dataset_with_access_entry4_2 = BigQueryDataset(
+        self.assertEqual(dataset5_1, dataset5_2)
+        self.assertEqual(dataset5_1, dataset5_3)
+        self.assertEqual(dataset5_2, dataset5_3)
+
+        dataset6_1 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry3]
+            (access_entry1, access_entry2)
         )
-        dataset_with_access_entry4_3 = BigQueryDataset(
+        dataset6_2 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [access_entry1, access_entry3]
+            (access_entry3, )
         )
-        self.assertNotEqual(dataset_with_access_entry4_1, dataset_with_access_entry4_2)
-        self.assertNotEqual(dataset_with_access_entry4_1, dataset_with_access_entry4_3)
-        self.assertNotEqual(dataset_with_access_entry4_2, dataset_with_access_entry4_3)
+        dataset6_3 = BigQueryDataset(
+            'foo',
+            'bar',
+            'test_description',
+            24 * 60 * 60 * 1000,
+            'US',
+            None,
+            (access_entry1, access_entry3)
+        )
+        self.assertNotEqual(dataset6_1, dataset6_2)
+        self.assertNotEqual(dataset6_1, dataset6_3)
+        self.assertNotEqual(dataset6_2, dataset6_3)
 
         label1 = {
             'foo': 'bar'
@@ -382,7 +382,7 @@ class TestBigQueryDataset(unittest.TestCase):
             'foo': 'bar'
         }
 
-        dataset_with_label5_1 = BigQueryDataset(
+        dataset7_1 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -391,7 +391,7 @@ class TestBigQueryDataset(unittest.TestCase):
             label1,
             None
         )
-        dataset_with_label5_2 = BigQueryDataset(
+        dataset7_2 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -400,9 +400,9 @@ class TestBigQueryDataset(unittest.TestCase):
             label1,
             None
         )
-        self.assertEqual(dataset_with_label5_1, dataset_with_label5_2)
+        self.assertEqual(dataset7_1, dataset7_2)
 
-        dataset_with_label6_1 = BigQueryDataset(
+        dataset8_1 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -411,7 +411,7 @@ class TestBigQueryDataset(unittest.TestCase):
             label1,
             None
         )
-        dataset_with_label6_2 = BigQueryDataset(
+        dataset8_2 = BigQueryDataset(
             'foo',
             'bar',
             'test_description',
@@ -420,7 +420,7 @@ class TestBigQueryDataset(unittest.TestCase):
             label2,
             None
         )
-        self.assertNotEqual(dataset_with_label6_1, dataset_with_label6_2)
+        self.assertNotEqual(dataset8_1, dataset8_2)
 
     def test_from_dict(self):
         expected_dataset1 = BigQueryDataset(
@@ -460,13 +460,13 @@ class TestBigQueryDataset(unittest.TestCase):
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [
+            (
                 BigQueryAccessEntry(
                     'OWNER',
                     'specialGroup',
                     'projectOwners'
-                )
-            ]
+                ),
+            )
         )
         actual_dataset2_1 = BigQueryDataset.from_dict({
             'dataset_id': 'test',
@@ -480,7 +480,7 @@ class TestBigQueryDataset(unittest.TestCase):
                     'role': 'OWNER',
                     'entity_type': 'specialGroup',
                     'entity_id': 'projectOwners'
-                }
+                },
             ]
         })
         self.assertEqual(expected_dataset2, actual_dataset2_1)
@@ -500,7 +500,7 @@ class TestBigQueryDataset(unittest.TestCase):
                         'projectId': 'test-project',
                         'tableId': 'test_table'
                     }
-                }
+                },
             ]
         })
         self.assertNotEqual(expected_dataset2, actual_dataset2_2)
@@ -577,13 +577,13 @@ class TestBigQueryDataset(unittest.TestCase):
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [
+            (
                 BigQueryAccessEntry(
                     'OWNER',
                     'specialGroup',
                     'projectOwners'
-                )
-            ]
+                ),
+            )
         )
         dataset_ref2_1 = client.dataset('test')
         dataset2_1 = Dataset(dataset_ref2_1)
@@ -600,11 +600,11 @@ class TestBigQueryDataset(unittest.TestCase):
         dataset2_2.description = 'test_description'
         dataset2_2.default_table_expiration_ms = 24 * 60 * 60 * 1000
         dataset2_2.location = 'US'
-        dataset2_2.access_entries =  [AccessEntry(None, 'view', {
+        dataset2_2.access_entries = (AccessEntry(None, 'view', {
             'datasetId': 'test',
             'projectId': 'test-project',
             'tableId': 'test_table'
-        })]
+        }), )
         actual_dataset2_2 = BigQueryDataset.from_dataset(dataset2_2)
         self.assertNotEqual(expected_dataset2, actual_dataset2_2)
 
@@ -706,9 +706,9 @@ class TestBigQueryDataset(unittest.TestCase):
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [
-                BigQueryAccessEntry('OWNER', 'specialGroup', 'projectOwners')
-            ]
+            (
+                BigQueryAccessEntry('OWNER', 'specialGroup', 'projectOwners'),
+            )
         ))
         self.assertEqual(expected_dataset2.access_entries, actual_dataset2_1.access_entries)
         actual_dataset2_2 = BigQueryDataset.to_dataset(client, BigQueryDataset(
@@ -718,13 +718,13 @@ class TestBigQueryDataset(unittest.TestCase):
             24 * 60 * 60 * 1000,
             'US',
             None,
-            [
+            (
                 BigQueryAccessEntry(None, 'view', {
                     'datasetId': 'test',
                     'projectId': 'test-project',
                     'tableId': 'test_table'
-                })
-            ]
+                }),
+            )
         ))
         self.assertNotEqual(expected_dataset2.access_entries, actual_dataset2_2.access_entries)
 

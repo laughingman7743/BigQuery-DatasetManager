@@ -48,21 +48,21 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'RECORD',
             'NULLABLE',
             'test_description',
-            [schema_field1_1]
+            (schema_field1_1, )
         )
         schema_field3_2 = BigQuerySchemaField(
             'test',
             'RECORD',
             'NULLABLE',
             'test_description',
-            [schema_field1_1]
+            (schema_field1_1, )
         )
         schema_field3_3 = BigQuerySchemaField(
             'test',
             'RECORD',
             'NULLABLE',
             'test_description',
-            (schema_field1_1, )
+            [schema_field1_1]
         )
         self.assertEqual(schema_field3_1, schema_field3_2)
         self.assertEqual(schema_field3_1, schema_field3_3)
@@ -72,28 +72,28 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'RECORD',
             'NULLABLE',
             'test_description',
-            [schema_field1_1]
+            (schema_field1_1)
         )
         schema_field4_2 = BigQuerySchemaField(
             'test',
             'RECORD',
             'NULLABLE',
             'test_description',
-            [schema_field1_1, schema_field2_1]
+            (schema_field1_1, schema_field2_1)
         )
         schema_field4_3 = BigQuerySchemaField(
             'test',
             'RECORD',
             'NULLABLE',
             'test_description',
-            [schema_field2_1, schema_field1_1]
+            (schema_field2_1, schema_field1_1)
         )
         schema_field4_4 = BigQuerySchemaField(
             'test',
             'RECORD',
             'NULLABLE',
             'test_description',
-            (schema_field2_1, schema_field1_1)
+            [schema_field2_1, schema_field1_1]
         )
         self.assertNotEqual(schema_field4_1, schema_field4_2)
         self.assertEqual(schema_field4_2, schema_field4_3)
@@ -129,7 +129,7 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'RECORD',
             'NULLABLE',
             'test_description',
-            [expected_schema_field1]
+            (expected_schema_field1, )
         )
         actual_schema_field2_1 = BigQuerySchemaField.from_dict({
             'name': 'test',
@@ -168,7 +168,7 @@ class TestBigQuerySchemaField(unittest.TestCase):
             'RECORD',
             'NULLABLE',
             'test_description',
-            [expected_schema_field1]
+            (expected_schema_field1, )
         )
         schema_field2_1 = SchemaField('test', 'RECORD', 'NULLABLE', 'test_description',
                                       (schema_field1_1, ))
