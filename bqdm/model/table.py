@@ -9,9 +9,10 @@ from bqdm.model.schema import BigQuerySchemaField
 
 class BigQueryTable(object):
 
-    def __init__(self, table_id, friendly_name, description, expires, location,
-                 partitioning_type, view_use_legacy_sql, view_query, schema,
-                 labels):
+    def __init__(self, table_id, friendly_name=None, description=None,
+                 expires=None, location=None, partitioning_type=None,
+                 view_use_legacy_sql=None, view_query=None, schema=None,
+                 labels=None):
         # TODO encryption_configuration
         # TODO external_data_configuration
         self.table_id = table_id
@@ -31,16 +32,16 @@ class BigQueryTable(object):
         if schema:
             schema = tuple(BigQuerySchemaField.from_dict(s) for s in schema)
         return BigQueryTable(
-            value.get('table_id', None),
-            value.get('friendly_name', None),
-            value.get('description', None),
-            value.get('expires', None),
-            value.get('location', None),
-            value.get('partitioning_type', None),
-            value.get('view_use_legacy_sql', None),
-            value.get('view_query', None),
-            schema,
-            value.get('labels', None),)
+            table_id=value.get('table_id', None),
+            friendly_name=value.get('friendly_name', None),
+            description=value.get('description', None),
+            expires=value.get('expires', None),
+            location=value.get('location', None),
+            partitioning_type=value.get('partitioning_type', None),
+            view_use_legacy_sql=value.get('view_use_legacy_sql', None),
+            view_query=value.get('view_query', None),
+            schema=schema,
+            labels=value.get('labels', None),)
 
     @staticmethod
     def from_table(table):
@@ -48,16 +49,16 @@ class BigQueryTable(object):
         if schema:
             schema = tuple(BigQuerySchemaField.from_schema_field(s) for s in schema)
         return BigQueryTable(
-            table.table_id,
-            table.friendly_name,
-            table.description,
-            table.expires,
-            table.location,
-            table.partitioning_type,
-            table.view_use_legacy_sql,
-            table.view_query,
-            schema,
-            table.labels,)
+            table_id=table.table_id,
+            friendly_name=table.friendly_name,
+            description=table.description,
+            expires=table.expires,
+            location=table.location,
+            partitioning_type=table.partitioning_type,
+            view_use_legacy_sql=table.view_use_legacy_sql,
+            view_query=table.view_query,
+            schema=schema,
+            labels=table.labels)
 
     @staticmethod
     def to_table(dataset_ref, model):

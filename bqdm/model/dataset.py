@@ -66,15 +66,16 @@ class BigQueryAccessEntry(object):
 
 class BigQueryDataset(object):
 
-    def __init__(self, dataset_id, friendly_name, description,
-                 default_table_expiration_ms, location, labels, access_entries):
+    def __init__(self, dataset_id, friendly_name=None, description=None,
+                 default_table_expiration_ms=None, location=None,
+                 access_entries=None, labels=None):
         self.dataset_id = dataset_id
         self.friendly_name = friendly_name
         self.description = description
         self.default_table_expiration_ms = default_table_expiration_ms
         self.location = location
-        self.labels = labels if labels else None
         self.access_entries = tuple(access_entries) if access_entries else None
+        self.labels = labels if labels else None
 
     @staticmethod
     def from_dict(value):
@@ -82,13 +83,14 @@ class BigQueryDataset(object):
         if access_entries:
             access_entries = tuple(BigQueryAccessEntry.from_dict(a)
                                    for a in access_entries)
-        return BigQueryDataset(value.get('dataset_id', None),
-                               value.get('friendly_name', None),
-                               value.get('description', None),
-                               value.get('default_table_expiration_ms', None),
-                               value.get('location', None),
-                               value.get('labels', None),
-                               access_entries)
+        return BigQueryDataset(
+            dataset_id=value.get('dataset_id', None),
+            friendly_name=value.get('friendly_name', None),
+            description=value.get('description', None),
+            default_table_expiration_ms=value.get('default_table_expiration_ms', None),
+            location=value.get('location', None),
+            access_entries=access_entries,
+            labels=value.get('labels', None))
 
     @staticmethod
     def from_dataset(dataset):
@@ -96,13 +98,14 @@ class BigQueryDataset(object):
         if access_entries:
             access_entries = tuple(BigQueryAccessEntry.from_access_entry(a)
                                    for a in access_entries)
-        return BigQueryDataset(dataset.dataset_id,
-                               dataset.friendly_name,
-                               dataset.description,
-                               dataset.default_table_expiration_ms,
-                               dataset.location,
-                               dataset.labels,
-                               access_entries)
+        return BigQueryDataset(
+            dataset_id=dataset.dataset_id,
+            friendly_name=dataset.friendly_name,
+            description=dataset.description,
+            default_table_expiration_ms=dataset.default_table_expiration_ms,
+            location=dataset.location,
+            access_entries=access_entries,
+            labels=dataset.labels)
 
     @staticmethod
     def to_dataset(project, model):
@@ -118,8 +121,8 @@ class BigQueryDataset(object):
         dataset.description = model.description
         dataset.default_table_expiration_ms = model.default_table_expiration_ms
         dataset.location = model.location
-        dataset.labels = model.labels if model.labels is not None else dict()
         dataset.access_entries = access_entries
+        dataset.labels = model.labels if model.labels is not None else dict()
         return dataset
 
     @staticmethod
@@ -132,8 +135,8 @@ class BigQueryDataset(object):
                 ('description', data.description),
                 ('default_table_expiration_ms', data.default_table_expiration_ms),
                 ('location', data.location),
-                ('labels', data.labels),
                 ('access_entries', data.access_entries),
+                ('labels', data.labels),
             )
         )
 
@@ -143,10 +146,10 @@ class BigQueryDataset(object):
                 self.description,
                 self.default_table_expiration_ms,
                 self.location,
-                frozenset(sorted(self.labels.items())) if self.labels is not None
-                else self.labels,
                 frozenset(self.access_entries) if self.access_entries is not None
-                else self.access_entries,)
+                else self.access_entries,
+                frozenset(sorted(self.labels.items())) if self.labels is not None
+                else self.labels,)
 
     def __eq__(self, other):
         if not isinstance(other, BigQueryDataset):

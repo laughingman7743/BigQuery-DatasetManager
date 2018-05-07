@@ -6,7 +6,8 @@ from google.cloud.bigquery.schema import SchemaField
 
 class BigQuerySchemaField(object):
 
-    def __init__(self, name, field_type, mode, description, fields):
+    def __init__(self, name, field_type, mode='NULLABLE',
+                 description=None, fields=None):
         self.name = name
         self.field_type = field_type
         self.mode = mode
@@ -15,15 +16,15 @@ class BigQuerySchemaField(object):
 
     @staticmethod
     def from_dict(value):
-        fields = value.get('fields', None)
+        fields = value.get('fields', ())
         if fields:
             fields = tuple(BigQuerySchemaField.from_dict(f) for f in fields)
         return BigQuerySchemaField(
-            value.get('name', None),
-            value.get('field_type', None),
-            value.get('mode', None),
-            value.get('description', None),
-            fields,)
+            name=value.get('name', None),
+            field_type=value.get('field_type', None),
+            mode=value.get('mode', None),
+            description=value.get('description', None),
+            fields=fields)
 
     @staticmethod
     def from_schema_field(schema_field):
@@ -31,11 +32,11 @@ class BigQuerySchemaField(object):
         if fields:
             fields = tuple(BigQuerySchemaField.from_schema_field(f) for f in fields)
         return BigQuerySchemaField(
-            schema_field.name,
-            schema_field.field_type,
-            schema_field.mode,
-            schema_field.description,
-            fields,)
+            name=schema_field.name,
+            field_type=schema_field.field_type,
+            mode=schema_field.mode,
+            description=schema_field.description,
+            fields=fields)
 
     @staticmethod
     def to_schema_field(model):
@@ -44,8 +45,12 @@ class BigQuerySchemaField(object):
             fields = tuple(BigQuerySchemaField.to_schema_field(f) for f in fields)
         else:
             fields = ()
-        return SchemaField(model.name, model.field_type, model.mode,
-                           model.description, fields)
+        return SchemaField(
+            name=model.name,
+            field_type=model.field_type,
+            mode=model.mode,
+            description=model.description,
+            fields=fields)
 
     @staticmethod
     def represent(dumper, data):

@@ -12,88 +12,84 @@ class TestBigQuerySchemaField(unittest.TestCase):
 
     def test_eq(self):
         schema_field1_1 = BigQuerySchemaField(
-            'test',
-            'STRING',
-            'NULLABLE',
-            'test_description',
-            None
+            name='test',
+            field_type='STRING',
+            mode='NULLABLE',
+            description='test_description'
         )
         schema_field1_2 = BigQuerySchemaField(
-            'test',
-            'STRING',
-            'NULLABLE',
-            'test_description',
-            None
+            name='test',
+            field_type='STRING',
+            mode='NULLABLE',
+            description='test_description'
         )
         self.assertEqual(schema_field1_1, schema_field1_2)
 
         schema_field2_1 = BigQuerySchemaField(
-            'test',
-            'INTEGER',
-            'NULLABLE',
-            'test_description',
-            None
+            name='test',
+            field_type='INTEGER',
+            mode='NULLABLE',
+            description='test_description'
         )
         schema_field2_2 = BigQuerySchemaField(
-            'test',
-            'STRING',
-            'REQUIRED',
-            'foo_bar',
-            None
+            name='test',
+            field_type='STRING',
+            mode='REQUIRED',
+            description='foo_bar'
         )
         self.assertNotEqual(schema_field2_1, schema_field2_2)
 
         schema_field3_1 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (schema_field1_1, )
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(schema_field1_1, )
         )
         schema_field3_2 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (schema_field1_1, )
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(schema_field1_1, )
         )
         schema_field3_3 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            [schema_field1_1]
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=[schema_field1_1]
         )
         self.assertEqual(schema_field3_1, schema_field3_2)
         self.assertEqual(schema_field3_1, schema_field3_3)
 
         schema_field4_1 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (schema_field1_1)
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(schema_field1_1, )
         )
         schema_field4_2 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (schema_field1_1, schema_field2_1)
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(schema_field1_1, schema_field2_1)
         )
         schema_field4_3 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (schema_field2_1, schema_field1_1)
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(schema_field2_1, schema_field1_1)
         )
         schema_field4_4 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            [schema_field2_1, schema_field1_1]
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=[schema_field2_1, schema_field1_1]
         )
         self.assertNotEqual(schema_field4_1, schema_field4_2)
         self.assertEqual(schema_field4_2, schema_field4_3)
@@ -101,11 +97,10 @@ class TestBigQuerySchemaField(unittest.TestCase):
 
     def test_from_dict(self):
         expected_schema_field1 = BigQuerySchemaField(
-            'test',
-            'STRING',
-            'NULLABLE',
-            'test_description',
-            None
+            name='test',
+            field_type='STRING',
+            mode='NULLABLE',
+            description='test_description'
         )
         actual_schema_field1_1 = BigQuerySchemaField.from_dict({
             'name': 'test',
@@ -125,11 +120,11 @@ class TestBigQuerySchemaField(unittest.TestCase):
         self.assertNotEqual(expected_schema_field1, actual_schema_field1_2)
 
         expected_schema_field2 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (expected_schema_field1, )
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(expected_schema_field1, )
         )
         actual_schema_field2_1 = BigQuerySchemaField.from_dict({
             'name': 'test',
@@ -150,11 +145,10 @@ class TestBigQuerySchemaField(unittest.TestCase):
 
     def test_from_schema_field(self):
         expected_schema_field1 = BigQuerySchemaField(
-            'test',
-            'STRING',
-            'NULLABLE',
-            'test_description',
-            None
+            name='test',
+            field_type='STRING',
+            mode='NULLABLE',
+            description='test_description'
         )
         schema_field1_1 = SchemaField('test', 'STRING', 'NULLABLE', 'test_description')
         actual_schema_field1_1 = BigQuerySchemaField.from_schema_field(schema_field1_1)
@@ -164,11 +158,11 @@ class TestBigQuerySchemaField(unittest.TestCase):
         self.assertNotEqual(expected_schema_field1, actual_schema_field1_2)
 
         expected_schema_field2 = BigQuerySchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (expected_schema_field1, )
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(expected_schema_field1, )
         )
         schema_field2_1 = SchemaField('test', 'RECORD', 'NULLABLE', 'test_description',
                                       (schema_field1_1, ))
@@ -181,10 +175,10 @@ class TestBigQuerySchemaField(unittest.TestCase):
 
     def test_to_schema_field(self):
         expected_schema_field1 = SchemaField(
-            'test',
-            'STRING',
-            'NULLABLE',
-            'test_description'
+            name='test',
+            field_type='STRING',
+            mode='NULLABLE',
+            description='test_description'
         )
         schema_field1_1 = BigQuerySchemaField('test', 'STRING', 'NULLABLE', 'test_description')
         actual_schema_field1_1 = BigQuerySchemaField.to_schema_field(schema_field1_1)
@@ -194,11 +188,11 @@ class TestBigQuerySchemaField(unittest.TestCase):
         self.assertNotEqual(expected_schema_field1, actual_schema_field1_2)
 
         expected_schema_field2 = SchemaField(
-            'test',
-            'RECORD',
-            'NULLABLE',
-            'test_description',
-            (expected_schema_field1, )
+            name='test',
+            field_type='RECORD',
+            mode='NULLABLE',
+            description='test_description',
+            fields=(expected_schema_field1, )
         )
         schema_field2_1 = BigQuerySchemaField('test', 'RECORD', 'NULLABLE', 'test_description',
                                               (schema_field1_1, ))
