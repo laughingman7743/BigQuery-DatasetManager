@@ -17,7 +17,8 @@ from bqdm.action.table import SchemaMigrationMode, TableAction
 from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import list_local_datasets, list_local_tables, str_representer
+from bqdm.util import (list_local_datasets, list_local_tables,
+                       str_representer, tuple_representer)
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -26,6 +27,7 @@ _logger.setLevel(logging.INFO)
 
 yaml.add_representer(str, str_representer)
 yaml.add_representer(unicode, str_representer)
+yaml.add_representer(tuple, tuple_representer)
 yaml.add_representer(BigQueryDataset, BigQueryDataset.represent)
 yaml.add_representer(BigQueryAccessEntry, BigQueryAccessEntry.represent)
 yaml.add_representer(BigQueryTable, BigQueryTable.represent)

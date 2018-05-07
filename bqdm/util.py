@@ -19,6 +19,10 @@ def str_representer(dumper, data):
         return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
+def tuple_representer(dumper, data):
+    return dumper.represent_sequence('tag:yaml.org,2002:seq', data)
+
+
 def dump(data):
     return yaml.dump(data, default_flow_style=False, indent=4,
                      allow_unicode=True, canonical=False)
