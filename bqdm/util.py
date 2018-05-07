@@ -9,8 +9,6 @@ from dateutil.parser import parse
 
 import click
 import yaml
-from bqdm.model.dataset import BigQueryDataset
-from bqdm.model.table import BigQueryTable
 
 
 def str_representer(dumper, data):
@@ -35,6 +33,8 @@ def echo_dump(data):
 
 
 def list_local_datasets(conf_dir):
+    from bqdm.model.dataset import BigQueryDataset
+
     if not os.path.exists(conf_dir):
         raise RuntimeError('Configuration file directory not found.')
 
@@ -50,6 +50,8 @@ def list_local_datasets(conf_dir):
 
 
 def list_local_tables(conf_dir, dataset_id):
+    from bqdm.model.table import BigQueryTable
+
     conf_dir = os.path.join(conf_dir, dataset_id)
     if not os.path.exists(conf_dir):
         # table resources unmanaged
