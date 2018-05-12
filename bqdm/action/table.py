@@ -15,6 +15,7 @@ from future.utils import iteritems
 from google.cloud import bigquery
 from google.cloud.bigquery.job import (CopyJobConfig, CreateDisposition, QueryJobConfig,
                                        WriteDisposition)
+from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 from bqdm.model.schema import BigQuerySchemaField
@@ -43,19 +44,41 @@ class TableAction(object):
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self.client = bigquery.Client(project, credentials)
-        dataset_ref = self.client.dataset(dataset_id)
-        self.dataset = self.client.get_dataset(dataset_ref)
+        self.dataset_ref = self.client.dataset(dataset_id)
         if backup_dataset_id:
-            backup_dataset_ref = self.client.dataset(backup_dataset_id)
-            self.backup_dataset = self.client.get_dataset(backup_dataset_ref)
+            self.backup_dataset_ref = self.client.dataset(backup_dataset_id)
         else:
-            self.backup_dataset = self.dataset
+            self.backup_dataset_ref = self.dataset_ref
         if migration_mode:
             self.migration_mode = SchemaMigrationMode(migration_mode)
         else:
             self.migration_mode = SchemaMigrationMode.SELECT_INSERT
         if debug:
             _logger.setLevel(logging.DEBUG)
+
+    @property
+    def dataset(self):
+        return self.client.get_dataset(self.dataset_ref)
+
+    @property
+    def exists_dataset(self):
+        try:
+            self.client.get_dataset(self.dataset_ref)
+            return True
+        except NotFound:
+            return False
+
+    @property
+    def backup_dataset(self):
+        return self.client.get_dataset(self.dataset_ref)
+
+    @property
+    def exists_backup_dataset(self):
+        try:
+            self.client.get_dataset(self.backup_dataset_ref)
+            return True
+        except NotFound:
+            return False
 
     @staticmethod
     def get_add_tables(source, target):
@@ -118,7 +141,7 @@ class TableAction(object):
     def select_insert(self, source_table_id, destination_table_id, query_field):
         query = 'SELECT {query_field} FROM {dataset_id}.{source_table_id}'.format(
             query_field=query_field,
-            dataset_id=self.dataset.dataset_id,
+            dataset_id=self.dataset_ref.dataset_id,
             source_table_id=source_table_id)
         destination_table = self.dataset.table(destination_table_id)
         job_config = QueryJobConfig()
@@ -169,12 +192,15 @@ class TableAction(object):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
-        table = BigQueryTable.to_table(self.dataset.reference, model)
+        table = BigQueryTable.to_table(self.dataset_ref, model)
         click.secho('    Temporary table creating... {0}'.format(table.path), fg='yellow')
         self.client.create_table(table)
         return tmp_table_model
 
     def list_tables(self):
+        if not self.exists_dataset:
+            return []
+
         tables = []
         for table in self.client.list_tables(self.dataset):
             table_ref = self.dataset.table(table.table_id)
@@ -186,15 +212,11 @@ class TableAction(object):
         return tables
 
     def export(self, output_dir):
-        output_dir = os.path.join(output_dir, self.dataset.dataset_id)
+        output_dir = os.path.join(output_dir, self.dataset_ref.dataset_id)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
         tables = self.list_tables()
-        if not tables:
-            keep_file = os.path.join(output_dir, '.gitkeep')
-            if not os.path.exists(keep_file):
-                open(keep_file, 'a').close()
         for table in tables:
             data = dump(BigQueryTable.from_table(table))
             _logger.debug(data)
@@ -202,11 +224,16 @@ class TableAction(object):
             click.echo('Export: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
-        click.echo()
+        if not tables:
+            keep_file = os.path.join(output_dir, '.gitkeep')
+            if not os.path.exists(keep_file):
+                open(keep_file, 'a').close()
+        else:
+            click.echo()
         return tables
 
     def _add(self, model):
-        table = BigQueryTable.to_table(self.dataset.reference, model)
+        table = BigQueryTable.to_table(self.dataset_ref, model)
         click.secho('  Adding... {0}'.format(table.path), fg='green')
         echo_dump(model)
         self.client.create_table(table)
@@ -229,7 +256,7 @@ class TableAction(object):
         return count
 
     def _change(self, source_model, target_model):
-        table = BigQueryTable.to_table(self.dataset.reference, target_model)
+        table = BigQueryTable.to_table(self.dataset_ref, target_model)
         click.secho('  Changing... {0}'.format(table.path), fg='yellow')
         echo_ndiff(source_model, target_model)
         source_labels = source_model.labels
@@ -271,7 +298,7 @@ class TableAction(object):
         return count
 
     def _destroy(self, model):
-        table = BigQueryTable.to_table(self.dataset.reference, model)
+        table = BigQueryTable.to_table(self.dataset_ref, model)
         click.secho('  Destroying... {0}'.format(table.path), fg='red')
         self.client.delete_table(table)
         click.echo()
