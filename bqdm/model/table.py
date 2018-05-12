@@ -11,16 +11,14 @@ from bqdm.util import parse_expires
 class BigQueryTable(object):
 
     def __init__(self, table_id, friendly_name=None, description=None,
-                 expires=None, location=None, partitioning_type=None,
-                 view_use_legacy_sql=None, view_query=None, schema=None,
-                 labels=None):
+                 expires=None, partitioning_type=None, view_use_legacy_sql=None,
+                 view_query=None, schema=None, labels=None):
         # TODO encryption_configuration
         # TODO external_data_configuration
         self.table_id = table_id
         self.friendly_name = friendly_name
         self.description = description
         self.expires = expires
-        self.location = location
         self.partitioning_type = partitioning_type
         self.view_use_legacy_sql = view_use_legacy_sql
         self.view_query = view_query
@@ -40,7 +38,6 @@ class BigQueryTable(object):
             friendly_name=value.get('friendly_name', None),
             description=value.get('description', None),
             expires=expires,
-            location=value.get('location', None),
             partitioning_type=value.get('partitioning_type', None),
             view_use_legacy_sql=value.get('view_use_legacy_sql', None),
             view_query=value.get('view_query', None),
@@ -56,7 +53,6 @@ class BigQueryTable(object):
             friendly_name=table.friendly_name,
             description=table.description,
             expires=table.expires,
-            location=table.location,
             partitioning_type=table.partitioning_type,
             view_use_legacy_sql=table.view_use_legacy_sql,
             view_query=table.view_query,
@@ -75,7 +71,6 @@ class BigQueryTable(object):
         table.friendly_name = model.friendly_name
         table.description = model.description
         table.expires = model.expires
-        table.location = model.location
         table.partitioning_type = model.partitioning_type
         if model.view_use_legacy_sql is not None:
             table.view_use_legacy_sql = model.view_use_legacy_sql
@@ -94,7 +89,6 @@ class BigQueryTable(object):
                 ('description', data.description),
                 ('expires', data.expires.strftime(
                     '%Y-%m-%dT%H:%M:%S.%f%z') if data.expires else data.expires),
-                ('location', data.location),
                 ('partitioning_type', data.partitioning_type),
                 ('view_use_legacy_sql', data.view_use_legacy_sql),
                 ('view_query', data.view_query),
@@ -108,7 +102,6 @@ class BigQueryTable(object):
                 self.friendly_name,
                 self.description,
                 self.expires,
-                self.location,
                 self.partitioning_type,
                 self.view_use_legacy_sql,
                 self.view_query,

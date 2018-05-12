@@ -44,7 +44,7 @@ def make_dataset(project, dataset_id, friendly_name=None, description=None,
 
 
 def make_table(project, dataset_id, table_id, friendly_name=None, description=None,
-               expires=None, location=None, partitioning_type=None, view_use_legacy_sql=None,
+               expires=None, partitioning_type=None, view_use_legacy_sql=None,
                view_query=None, schema=None, labels=None):
     dataset_ref = DatasetReference(project, dataset_id)
     table_ref = TableReference(dataset_ref, table_id)
@@ -52,7 +52,6 @@ def make_table(project, dataset_id, table_id, friendly_name=None, description=No
     table.friendly_name = friendly_name
     table.description = description
     table.expires = expires
-    table.location = location
     table.partitioning_type = partitioning_type
     if view_use_legacy_sql is not None:
         table.view_use_legacy_sql = view_use_legacy_sql

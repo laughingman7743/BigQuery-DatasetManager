@@ -174,14 +174,12 @@ labels:
         table1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         expected_dump_data1 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -196,14 +194,12 @@ labels: null
             friendly_name='fizz_buzz',
             description='foo_bar',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='EU',
             partitioning_type='DAY',
         )
         expected_dump_data2 = """table_id: test
 friendly_name: fizz_buzz
 description: foo_bar
 expires: 2018-01-01T00:00:00.000000+0000
-location: EU
 partitioning_type: DAY
 view_use_legacy_sql: null
 view_query: null
@@ -225,7 +221,6 @@ bigquery_datasetmanager.test.test"""
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: null
 partitioning_type: null
 view_use_legacy_sql: false
 view_query: |-
@@ -268,14 +263,12 @@ labels: null
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         expected_dump_data4 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -294,14 +287,12 @@ labels: null
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, schema_field2)
         )
         expected_dump_data5 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -325,14 +316,12 @@ labels: null
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field3, )
         )
         expected_dump_data6 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -361,14 +350,12 @@ labels: null
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field4, )
         )
         expected_dump_data7 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -410,14 +397,12 @@ labels: null
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label1
         )
         expected_dump_data8 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null
@@ -432,14 +417,12 @@ labels:
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label2
         )
         expected_dump_data9 = """table_id: test
 friendly_name: test_friendly_name
 description: test_description
 expires: null
-location: US
 partitioning_type: null
 view_use_legacy_sql: null
 view_query: null

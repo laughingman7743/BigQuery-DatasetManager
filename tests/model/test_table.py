@@ -18,29 +18,25 @@ class TestBigQueryTable(unittest.TestCase):
         table1_1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         table1_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         self.assertEqual(table1_1, table1_2)
 
         table2_1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         table2_2 = BigQueryTable(
             table_id='test',
             friendly_name='fizz_buzz',
             description='foo_bar',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='EU',
             partitioning_type='DAY',
         )
         self.assertNotEqual(table2_1, table2_2)
@@ -49,7 +45,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US'
         )
         table3_2 = BigQueryTable(
             table_id='test',
@@ -77,14 +72,12 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         table4_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         self.assertEqual(table4_1, table4_2)
@@ -93,14 +86,12 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         table5_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field2, )
         )
         self.assertNotEqual(table5_1, table5_2)
@@ -109,21 +100,18 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, schema_field2)
         )
         table6_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field2, schema_field1)
         )
         table6_3 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=[schema_field1, schema_field2]
         )
         self.assertEqual(table6_1, table6_2)
@@ -133,21 +121,18 @@ class TestBigQueryTable(unittest.TestCase):
         table7_1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         table7_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         table7_3 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, schema_field2)
         )
         self.assertNotEqual(table7_1, table7_2)
@@ -165,14 +150,12 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label1
         )
         table8_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label1
         )
         self.assertEqual(table8_1, table8_2)
@@ -181,14 +164,12 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label1
         )
         table9_2 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label2
         )
         self.assertNotEqual(table9_1, table9_2)
@@ -197,14 +178,12 @@ class TestBigQueryTable(unittest.TestCase):
         expected_table1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         actual_table1_1 = BigQueryTable.from_dict({
             'table_id': 'test',
             'friendly_name': 'test_friendly_name',
-            'description': 'test_description',
-            'location': 'US'
+            'description': 'test_description'
         })
         self.assertEqual(expected_table1, actual_table1_1)
         actual_table1_2 = BigQueryTable.from_dict({
@@ -212,7 +191,6 @@ class TestBigQueryTable(unittest.TestCase):
             'friendly_name': 'fizz_buzz',
             'description': 'foo_bar',
             'expires': '2018-01-01T00:00:00.000000+00:00',
-            'location': 'EU',
             'partitioning_type': 'DAY'
         })
         self.assertNotEqual(expected_table1, actual_table1_2)
@@ -245,7 +223,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 BigQuerySchemaField(
                     'test',
@@ -260,7 +237,6 @@ class TestBigQueryTable(unittest.TestCase):
             'table_id': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
-            'location': 'US',
             'schema': [
                 {
                     'name': 'test',
@@ -276,7 +252,6 @@ class TestBigQueryTable(unittest.TestCase):
             'table_id': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
-            'location': 'US',
             'schema': [
                 {
                     'name': 'test',
@@ -293,7 +268,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar'
             }
@@ -302,7 +276,6 @@ class TestBigQueryTable(unittest.TestCase):
             'table_id': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
-            'location': 'US',
             'labels': {
                 'foo': 'bar'
             }
@@ -312,7 +285,6 @@ class TestBigQueryTable(unittest.TestCase):
             'table_id': 'test',
             'friendly_name': 'test_friendly_name',
             'description': 'test_description',
-            'location': 'US',
             'labels': {
                 'foo': 'bar',
                 'fizz': 'buzz'
@@ -326,16 +298,14 @@ class TestBigQueryTable(unittest.TestCase):
         expected_table1 = BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         actual_table1_1 = BigQueryTable.from_table(make_table(
             project=project,
             dataset_id='test',
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US',
+            description='test_description'
         ))
         self.assertEqual(expected_table1, actual_table1_1)
         actual_table1_2 = BigQueryTable.from_table(make_table(
@@ -343,8 +313,7 @@ class TestBigQueryTable(unittest.TestCase):
             dataset_id='test',
             table_id='test',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         ))
         self.assertNotEqual(expected_table1, actual_table1_2)
 
@@ -353,7 +322,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type='DAY'
         )
         actual_table2_1 = BigQueryTable.from_table(make_table(
@@ -363,7 +331,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type='DAY'
         ))
         self.assertEqual(expected_table2, actual_table2_1)
@@ -374,7 +341,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2019, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type=None
         ))
         self.assertNotEqual(expected_table2, actual_table2_2)
@@ -411,7 +377,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 BigQuerySchemaField(
                     name='test',
@@ -428,7 +393,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 SchemaField(
                     name='test',
@@ -445,7 +409,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 SchemaField(
                     name='test',
@@ -461,7 +424,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar'
             }
@@ -472,7 +434,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar'
             }
@@ -484,7 +445,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar',
                 'fizz': 'buzz'
@@ -501,29 +461,24 @@ class TestBigQueryTable(unittest.TestCase):
             dataset_id='test',
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US',
+            description='test_description'
         )
         actual_table1_1 = BigQueryTable.to_table(dataset_ref, BigQueryTable(
             table_id='test',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         ))
         self.assertEqual(expected_table1.table_id, actual_table1_1.table_id)
         self.assertEqual(expected_table1.friendly_name, actual_table1_1.friendly_name)
         self.assertEqual(expected_table1.description, actual_table1_1.description)
-        self.assertEqual(expected_table1.location, actual_table1_1.location)
         actual_table1_2 = BigQueryTable.to_table(dataset_ref, BigQueryTable(
             table_id='aaa',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         ))
         self.assertNotEqual(expected_table1.table_id, actual_table1_2.table_id)
         self.assertNotEqual(expected_table1.friendly_name, actual_table1_2.friendly_name)
         self.assertNotEqual(expected_table1.description, actual_table1_2.description)
-        self.assertNotEqual(expected_table1.location, actual_table1_2.location)
 
         expected_table2 = make_table(
             project=project,
@@ -532,7 +487,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type='DAY'
         )
         actual_table2_1 = BigQueryTable.to_table(dataset_ref, BigQueryTable(
@@ -540,7 +494,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type='DAY'
         ))
         self.assertEqual(expected_table2.expires, actual_table2_1.expires)
@@ -551,7 +504,6 @@ class TestBigQueryTable(unittest.TestCase):
             friendly_name='test_friendly_name',
             description='description',
             expires=datetime(2019, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type=None
         ))
         self.assertNotEqual(expected_table2.expires, actual_table2_2.expires)
@@ -594,7 +546,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 SchemaField(
                     name='test',
@@ -608,7 +559,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 BigQuerySchemaField(
                     'test',
@@ -624,7 +574,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(
                 SchemaField(
                     name='test',
@@ -642,7 +591,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar'
             }
@@ -651,7 +599,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar'
             }
@@ -661,7 +608,6 @@ class TestBigQueryTable(unittest.TestCase):
             table_id='test',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels={
                 'foo': 'bar',
                 'fizz': 'buzz'

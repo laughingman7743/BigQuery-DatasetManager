@@ -17,27 +17,23 @@ class TestTableAction(unittest.TestCase):
         source_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         source_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         )
 
         target_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         target_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         )
 
         source1 = [source_table1_1]
@@ -82,15 +78,13 @@ class TestTableAction(unittest.TestCase):
         source_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         source_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='test_friendly_name',
             description='test_description',
             expires=datetime(2018, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US',
             partitioning_type='DAY'
         )
         source_table1_3 = BigQueryTable(
@@ -104,29 +98,25 @@ class TestTableAction(unittest.TestCase):
             table_id='test4',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field1, )
         )
         source_table1_5 = BigQueryTable(
             table_id='test5',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label1
         )
 
         target_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         )
         target_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='test_friendly_name',
             description='test_description',
-            expires=datetime(2019, 1, 1, 0, 0, 0, tzinfo=UTC),
-            location='US'
+            expires=datetime(2019, 1, 1, 0, 0, 0, tzinfo=UTC)
         )
         target_table1_3 = BigQueryTable(
             table_id='test3',
@@ -139,14 +129,12 @@ class TestTableAction(unittest.TestCase):
             table_id='test4',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             schema=(schema_field2, )
         )
         target_table1_5 = BigQueryTable(
             table_id='test5',
             friendly_name='test_friendly_name',
             description='test_description',
-            location='US',
             labels=label2
         )
 
@@ -236,27 +224,23 @@ class TestTableAction(unittest.TestCase):
         source_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         source_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         )
 
         target_table1_1 = BigQueryTable(
             table_id='test1',
             friendly_name='test_friendly_name',
-            description='test_description',
-            location='US'
+            description='test_description'
         )
         target_table1_2 = BigQueryTable(
             table_id='test2',
             friendly_name='foo_bar',
-            description='fizz_buzz',
-            location='EU'
+            description='fizz_buzz'
         )
 
         source1 = [source_table1_1]
