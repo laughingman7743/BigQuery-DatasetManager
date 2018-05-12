@@ -37,8 +37,8 @@ class SchemaMigrationMode(Enum):
 
 class TableAction(object):
 
-    def __init__(self, dataset_id, migration_mode=SchemaMigrationMode.SELECT_INSERT,
-                 backup_dataset_id=None, project=None, credential_file=None, debug=False):
+    def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None,
+                 project=None, credential_file=None, debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
@@ -50,7 +50,10 @@ class TableAction(object):
             self.backup_dataset = self.client.get_dataset(backup_dataset_ref)
         else:
             self.backup_dataset = self.dataset
-        self.migration_mode = migration_mode
+        if migration_mode:
+            self.migration_mode = SchemaMigrationMode(migration_mode)
+        else:
+            self.migration_mode = SchemaMigrationMode.SELECT_INSERT
         if debug:
             _logger.setLevel(logging.DEBUG)
 

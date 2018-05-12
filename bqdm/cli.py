@@ -120,12 +120,13 @@ def plan(ctx, conf_dir, detailed_exitcode):
 @click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
               help=msg.HELP_OPTION_CONF_DIR)
 @click.option('--mode', '-m', type=click.Choice([
-    SchemaMigrationMode.SELECT_INSERT,
-    SchemaMigrationMode.SELECT_INSERT_BACKUP,
-    SchemaMigrationMode.REPLACE,
-    SchemaMigrationMode.REPLACE_BACKUP,
-    SchemaMigrationMode.DROP_CREATE
-]), required=True, help=msg.HELP_OPTION_MIGRATION_MODE)
+    SchemaMigrationMode.SELECT_INSERT.value,
+    SchemaMigrationMode.SELECT_INSERT_BACKUP.value,
+    SchemaMigrationMode.REPLACE.value,
+    SchemaMigrationMode.REPLACE_BACKUP.value,
+    SchemaMigrationMode.DROP_CREATE.value]),
+              required=True, default=SchemaMigrationMode.SELECT_INSERT.value,
+              help=msg.HELP_OPTION_MIGRATION_MODE)
 @click.option('--backup_dataset', '-b', type=str, required=False,
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
