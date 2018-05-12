@@ -51,12 +51,12 @@ def cli(ctx, credential_file, project, debug):
 
 
 @cli.command(help=msg.HELP_COMMAND_EXPORT)
-@click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OPTION_OUTPUT_DIR)
+@click.argument('output_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+                default='.')
 @click.pass_context
 def export(ctx, output_dir):
     # TODO dataset option
     # TODO exclude dataset option
-    # TODO remove -o option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -69,15 +69,14 @@ def export(ctx, output_dir):
 
 
 @cli.command(help=msg.HELP_COMMAND_PLAN)
-@click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_OPTION_CONF_DIR)
+@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+                default='.')
 @click.option('--detailed_exitcode', is_flag=True, default=False,
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan(ctx, conf_dir, detailed_exitcode):
     # TODO dataset option
     # TODO exclude dataset option
-    # TODO remove conf_dir option -> argument PATH
     click.echo(msg.MESSAGE_PLAN_HEADER)
 
     dataset_action = DatasetAction(ctx.obj['credential_file'],
@@ -117,8 +116,8 @@ def plan(ctx, conf_dir, detailed_exitcode):
 
 
 @cli.command(help=msg.HELP_COMMAND_APPLY)
-@click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_OPTION_CONF_DIR)
+@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+                default='.')
 @click.option('--mode', '-m', type=click.Choice([
     SchemaMigrationMode.SELECT_INSERT.value,
     SchemaMigrationMode.SELECT_INSERT_BACKUP.value,
@@ -133,7 +132,6 @@ def plan(ctx, conf_dir, detailed_exitcode):
 def apply(ctx, conf_dir, mode, backup_dataset):
     # TODO dataset option
     # TODO exclude dataset option
-    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -175,15 +173,14 @@ def destroy(ctx):
 
 
 @destroy.command('plan', help=msg.HELP_COMMAND_PLAN_DESTROY)
-@click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_OPTION_CONF_DIR)
+@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+                default='.')
 @click.option('--detailed_exitcode', is_flag=True, default=False,
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
     # TODO dataset option
     # TODO exclude dataset option
-    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -203,13 +200,12 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
 
 
 @destroy.command('apply', help=msg.HELP_COMMAND_APPLY_DESTROY)
-@click.option('--conf_dir', '-d', type=click.Path(exists=True, file_okay=False), required=True,
-              help=msg.HELP_OPTION_CONF_DIR)
+@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+                default='.')
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
     # TODO dataset option
     # TODO exclude dataset option
-    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
