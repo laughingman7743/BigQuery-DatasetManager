@@ -181,14 +181,26 @@ def destroy(ctx):
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
     # TODO dataset option
     # TODO exclude dataset option
+    click.echo(msg.MESSAGE_PLAN_HEADER)
+
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
-    click.echo(msg.MESSAGE_PLAN_HEADER)
     destroy_count = dataset_action.plan_intersection_destroy(source_datasets, target_datasets)
+
+    destroy_table_count = 0
+    for dataset in target_datasets:
+        table_action = TableAction(dataset.dataset_id,
+                                   credential_file=ctx.obj['credential_file'],
+                                   project=ctx.obj['project'],
+                                   debug=ctx.obj['debug'])
+        source_tables = table_action.list_tables()
+        destroy_table_count += table_action.plan_destroy(source_tables, [])
+
+    # TODO dataset & table summary
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
@@ -212,7 +224,17 @@ def apply_destroy(ctx, conf_dir):
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
+    destroy_table_count = 0
+    for dataset in target_datasets:
+        table_action = TableAction(dataset.dataset_id,
+                                   credential_file=ctx.obj['credential_file'],
+                                   project=ctx.obj['project'],
+                                   debug=ctx.obj['debug'])
+        source_tables = table_action.list_tables()
+        destroy_table_count += table_action.destroy(source_tables, [])
     destroy_count = dataset_action.intersection_destroy(source_datasets, target_datasets)
+
+    # TODO dataset & table summary
     if destroy_count == 0:
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
