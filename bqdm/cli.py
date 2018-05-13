@@ -103,13 +103,15 @@ def plan(ctx, conf_dir, detailed_exitcode):
             change_table_count += table_action.plan_change(source_tables, target_tables)
             destroy_table_count += table_action.plan_destroy(source_tables, target_tables)
 
-    # TODO dataset & table summary
-    if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
+    if not any([add_dataset_count, change_dataset_count, destroy_dataset_count,
+                add_table_count, change_table_count, destroy_table_count]):
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
         click.echo(msg.MESSAGE_PLAN_SUMMARY.format(
-            add_dataset_count, change_dataset_count, destroy_dataset_count))
+            add_dataset_count + add_table_count,
+            change_dataset_count + change_table_count,
+            destroy_dataset_count + destroy_table_count))
         click.echo()
         if detailed_exitcode:
             sys.exit(2)
@@ -156,13 +158,15 @@ def apply(ctx, conf_dir, mode, backup_dataset):
             change_table_count += table_action.change(source_tables, target_tables)
             destroy_table_count += table_action.destroy(source_tables, target_tables)
 
-    # TODO dataset & table summary
-    if add_dataset_count == 0 and change_dataset_count == 0 and destroy_dataset_count == 0:
+    if not any([add_dataset_count, change_dataset_count, destroy_dataset_count,
+                add_table_count, change_table_count, destroy_table_count]):
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
         click.secho(msg.MESSAGE_APPLY_SUMMARY.format(
-            add_dataset_count, change_dataset_count, destroy_dataset_count))
+            add_dataset_count + add_table_count,
+            change_dataset_count + change_table_count,
+            destroy_dataset_count + destroy_table_count))
         click.echo()
 
 
@@ -189,7 +193,8 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
-    destroy_count = dataset_action.plan_intersection_destroy(source_datasets, target_datasets)
+    destroy_dataset_count = dataset_action.plan_intersection_destroy(
+        source_datasets, target_datasets)
 
     destroy_table_count = 0
     for dataset in target_datasets:
@@ -200,12 +205,12 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
         source_tables = table_action.list_tables()
         destroy_table_count += table_action.plan_destroy(source_tables, [])
 
-    # TODO dataset & table summary
-    if destroy_count == 0:
+    if not any([destroy_dataset_count, destroy_table_count]):
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
-        click.echo(msg.MESSAGE_PLAN_DESTROY_SUMMARY.format(destroy_count))
+        click.echo(msg.MESSAGE_PLAN_DESTROY_SUMMARY.format(
+            destroy_dataset_count + destroy_table_count))
         click.echo()
         if detailed_exitcode:
             sys.exit(2)
@@ -232,14 +237,14 @@ def apply_destroy(ctx, conf_dir):
                                    debug=ctx.obj['debug'])
         source_tables = table_action.list_tables()
         destroy_table_count += table_action.destroy(source_tables, [])
-    destroy_count = dataset_action.intersection_destroy(source_datasets, target_datasets)
+    destroy_dataset_count = dataset_action.intersection_destroy(source_datasets, target_datasets)
 
-    # TODO dataset & table summary
-    if destroy_count == 0:
+    if not any([destroy_dataset_count, destroy_table_count]):
         click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
         click.echo()
     else:
-        click.echo(msg.MESSAGE_APPLY_DESTROY_SUMMARY.format(destroy_count))
+        click.echo(msg.MESSAGE_APPLY_DESTROY_SUMMARY.format(
+            destroy_dataset_count + destroy_table_count))
         click.echo()
 
 
