@@ -240,10 +240,10 @@ class TableAction(object):
         if target_model.schema != source_model.schema:
             self.migrate(source_model, target_model)
         self.client.update_table(table, [
-            'friendly_name',  # TODO updatable field?
+            'friendly_name',
             'description',
             'expires',
-            'view_use_legacy_sql',  # TODO updatable field?
+            'view_use_legacy_sql',
             'view_query',
             'labels',
         ])

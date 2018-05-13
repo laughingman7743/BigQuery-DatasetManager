@@ -54,6 +54,9 @@ def cli(ctx, credential_file, project, debug):
 @click.option('--output_dir', '-o', type=str, required=True, help=msg.HELP_OPTION_OUTPUT_DIR)
 @click.pass_context
 def export(ctx, output_dir):
+    # TODO dataset option
+    # TODO exclude dataset option
+    # TODO remove -o option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -72,6 +75,9 @@ def export(ctx, output_dir):
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan(ctx, conf_dir, detailed_exitcode):
+    # TODO dataset option
+    # TODO exclude dataset option
+    # TODO remove conf_dir option -> argument PATH
     click.echo(msg.MESSAGE_PLAN_HEADER)
 
     dataset_action = DatasetAction(ctx.obj['credential_file'],
@@ -124,6 +130,9 @@ def plan(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
 def apply(ctx, conf_dir, mode, backup_dataset):
+    # TODO dataset option
+    # TODO exclude dataset option
+    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -171,6 +180,9 @@ def destroy(ctx):
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.pass_context
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
+    # TODO dataset option
+    # TODO exclude dataset option
+    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])
@@ -194,6 +206,9 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
               help=msg.HELP_OPTION_CONF_DIR)
 @click.pass_context
 def apply_destroy(ctx, conf_dir):
+    # TODO dataset option
+    # TODO exclude dataset option
+    # TODO remove conf_dir option -> argument PATH
     dataset_action = DatasetAction(ctx.obj['credential_file'],
                                    ctx.obj['project'],
                                    ctx.obj['debug'])

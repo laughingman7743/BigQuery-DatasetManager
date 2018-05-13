@@ -291,4 +291,7 @@ Run test multiple Python versions
 TODO
 ----
 
-#. Manage table resources
+#. Integration tests
+#. Support encryption configuration for table
+#. Support external data configuration for table
+#. Schema replication

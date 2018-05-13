@@ -125,7 +125,7 @@ class DatasetAction(object):
                     labels[k] = None
             dataset.labels = labels
         self.client.update_dataset(dataset, [
-            'friendly_name',  # TODO updatable field?
+            'friendly_name',
             'description',
             'default_table_expiration_ms',
             'labels',
