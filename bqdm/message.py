@@ -25,7 +25,11 @@ more granular information about what the resulting plan contains:
 2 = Succeeded with non-empty diff"""
 HELP_OPTION_MIGRATION_MODE = """
 """  # TODO
+HELP_OPTION_DATASET = """
+"""  # TODO
 HELP_OPTION_BACKUP_DATASET = """
+"""  # TODO
+HELP_OPTION_EXCLUDE_DATASET = """
 """  # TODO
 
 MESSAGE_PLAN_HEADER = """An execution plan has been generated and is shown below.

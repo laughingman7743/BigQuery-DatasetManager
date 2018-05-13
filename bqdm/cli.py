@@ -34,7 +34,7 @@ yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--credential_file', '-c', type=click.Path(exists=True), required=False,
+@click.option('--credential-file', '-c', type=click.Path(exists=True), required=False,
               help=msg.HELP_OPTION_CREDENTIAL_FILE)
 @click.option('--project', '-p', type=str, required=False,
               help=msg.HELP_OPTION_PROJECT)
@@ -54,41 +54,45 @@ def cli(ctx, credential_file, project, color, debug):
 
 
 @cli.command(help=msg.HELP_COMMAND_EXPORT)
-@click.argument('output_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+@click.argument('output-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
+@click.option('--dataset', '-d', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_DATASET)
+@click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
-def export(ctx, output_dir):
-    # TODO dataset option
-    # TODO exclude dataset option
+def export(ctx, output_dir, dataset, exclude_dataset):
     dataset_action = DatasetAction(project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
-    datasets = dataset_action.export(output_dir)
-    for dataset in datasets:
-        table_action = TableAction(dataset.dataset_id,
+    datasets = dataset_action.export(output_dir, dataset, exclude_dataset)
+    for d in datasets:
+        table_action = TableAction(d.dataset_id,
                                    credential_file=ctx.obj['credential_file'],
                                    project=ctx.obj['project'])
         table_action.export(output_dir)
 
 
 @cli.command(help=msg.HELP_COMMAND_PLAN)
-@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+@click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
 @click.option('--detailed_exitcode', is_flag=True, default=False,
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
+@click.option('--dataset', '-d', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_DATASET)
+@click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
-def plan(ctx, conf_dir, detailed_exitcode):
-    # TODO dataset option
-    # TODO exclude dataset option
+def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
     echo(msg.MESSAGE_PLAN_HEADER)
 
     dataset_action = DatasetAction(project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
-    source_datasets = dataset_action.list_datasets()
-    target_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets(dataset, exclude_dataset)
+    target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
 
     add_dataset_count = dataset_action.plan_add(source_datasets, target_datasets)
     change_dataset_count = dataset_action.plan_change(source_datasets, target_datasets)
@@ -96,10 +100,10 @@ def plan(ctx, conf_dir, detailed_exitcode):
 
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
-    for dataset in target_datasets:
-        target_tables = list_local_tables(conf_dir, dataset.dataset_id)
+    for d in target_datasets:
+        target_tables = list_local_tables(conf_dir, d.dataset_id)
         if target_tables is not None:
-            table_action = TableAction(dataset.dataset_id,
+            table_action = TableAction(d.dataset_id,
                                        project=ctx.obj['project'],
                                        credential_file=ctx.obj['credential_file'],
                                        no_color=not ctx.obj['color'],
@@ -124,8 +128,12 @@ def plan(ctx, conf_dir, detailed_exitcode):
 
 
 @cli.command(help=msg.HELP_COMMAND_APPLY)
-@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+@click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
+@click.option('--dataset', '-d', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_DATASET)
+@click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.option('--mode', '-m', type=click.Choice([
     SchemaMigrationMode.SELECT_INSERT.value,
     SchemaMigrationMode.SELECT_INSERT_BACKUP.value,
@@ -134,18 +142,16 @@ def plan(ctx, conf_dir, detailed_exitcode):
     SchemaMigrationMode.DROP_CREATE.value]),
               required=True, default=SchemaMigrationMode.SELECT_INSERT.value,
               help=msg.HELP_OPTION_MIGRATION_MODE)
-@click.option('--backup_dataset', '-b', type=str, required=False,
+@click.option('--backup-dataset', '-b', type=str, required=False,
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
-def apply(ctx, conf_dir, mode, backup_dataset):
-    # TODO dataset option
-    # TODO exclude dataset option
+def apply(ctx, conf_dir, dataset, exclude_dataset, mode, backup_dataset):
     dataset_action = DatasetAction(project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
-    source_datasets = dataset_action.list_datasets()
-    target_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets(dataset, exclude_dataset)
+    target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
 
     add_dataset_count = dataset_action.add(source_datasets, target_datasets)
     change_dataset_count = dataset_action.change(source_datasets, target_datasets)
@@ -153,10 +159,10 @@ def apply(ctx, conf_dir, mode, backup_dataset):
 
     add_table_count, change_table_count, destroy_table_count = 0, 0, 0
     # TODO ThreadPoolExecutor
-    for dataset in target_datasets:
-        target_tables = list_local_tables(conf_dir, dataset.dataset_id)
+    for d in target_datasets:
+        target_tables = list_local_tables(conf_dir, d.dataset_id)
         if target_tables is not None:
-            table_action = TableAction(dataset.dataset_id,
+            table_action = TableAction(d.dataset_id,
                                        migration_mode=mode,
                                        backup_dataset_id=backup_dataset,
                                        project=ctx.obj['project'],
@@ -187,29 +193,31 @@ def destroy(ctx):
 
 
 @destroy.command('plan', help=msg.HELP_COMMAND_PLAN_DESTROY)
-@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+@click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
-@click.option('--detailed_exitcode', is_flag=True, default=False,
+@click.option('--detailed-exitcode', is_flag=True, default=False,
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
+@click.option('--dataset', '-d', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_DATASET)
+@click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
-def plan_destroy(ctx, conf_dir, detailed_exitcode):
-    # TODO dataset option
-    # TODO exclude dataset option
+def plan_destroy(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
     echo(msg.MESSAGE_PLAN_HEADER)
 
     dataset_action = DatasetAction(project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
-    source_datasets = dataset_action.list_datasets()
-    target_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets(dataset, exclude_dataset)
+    target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
 
     destroy_dataset_count = dataset_action.plan_intersection_destroy(
         source_datasets, target_datasets)
 
     destroy_table_count = 0
-    for dataset in target_datasets:
-        table_action = TableAction(dataset.dataset_id,
+    for d in target_datasets:
+        table_action = TableAction(d.dataset_id,
                                    project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
@@ -229,22 +237,24 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
 
 
 @destroy.command('apply', help=msg.HELP_COMMAND_APPLY_DESTROY)
-@click.argument('conf_dir', type=click.Path(exists=True, dir_okay=True), required=False,
+@click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
+@click.option('--dataset', '-d', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_DATASET)
+@click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
+              help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
-def apply_destroy(ctx, conf_dir):
-    # TODO dataset option
-    # TODO exclude dataset option
+def apply_destroy(ctx, conf_dir, dataset, exclude_dataset):
     dataset_action = DatasetAction(project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
-    source_datasets = dataset_action.list_datasets()
-    target_datasets = list_local_datasets(conf_dir)
+    source_datasets = dataset_action.list_datasets(dataset, exclude_dataset)
+    target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
 
     destroy_table_count = 0
-    for dataset in target_datasets:
-        table_action = TableAction(dataset.dataset_id,
+    for d in target_datasets:
+        table_action = TableAction(d.dataset_id,
                                    project=ctx.obj['project'],
                                    credential_file=ctx.obj['credential_file'],
                                    no_color=not ctx.obj['color'],

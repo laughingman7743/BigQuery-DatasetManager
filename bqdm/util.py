@@ -27,27 +27,43 @@ def dump(data):
                      allow_unicode=True, canonical=False)
 
 
-def list_local_datasets(conf_dir):
+def load_dataset(conf):
     from bqdm.model.dataset import BigQueryDataset
 
+    echo('Load dataset config: {0}'.format(conf))
+    with codecs.open(conf, 'rb', 'utf-8') as f:
+        return BigQueryDataset.from_dict(yaml.load(f))
+
+
+def list_local_datasets(conf_dir, include_datasets=(), exclude_datasets=()):
     if not os.path.exists(conf_dir):
         raise RuntimeError('Configuration file directory not found.')
 
     datasets = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        echo('Load dataset config: {0}'.format(conf))
-        with codecs.open(conf, 'rb', 'utf-8') as f:
-            datasets.append(BigQueryDataset.from_dict(yaml.load(f)))
+        dataset_id = os.path.splitext(os.path.basename(conf))[0]
+        if not include_datasets:
+            if dataset_id not in exclude_datasets:
+                datasets.append(load_dataset(conf))
+        else:
+            if dataset_id in include_datasets and dataset_id not in exclude_datasets:
+                datasets.append(load_dataset(conf))
     if datasets:
         echo('------------------------------------------------------------------------')
         echo()
     return datasets
 
 
-def list_local_tables(conf_dir, dataset_id):
+def load_table(conf):
     from bqdm.model.table import BigQueryTable
 
+    echo('Load table config: {0}'.format(conf))
+    with codecs.open(conf, 'rb', 'utf-8') as f:
+        return BigQueryTable.from_dict(yaml.load(f))
+
+
+def list_local_tables(conf_dir, dataset_id):
     conf_dir = os.path.join(conf_dir, dataset_id)
     if not os.path.exists(conf_dir):
         # table resources unmanaged
@@ -56,9 +72,7 @@ def list_local_tables(conf_dir, dataset_id):
     tables = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        echo('Load table config: {0}'.format(conf))
-        with codecs.open(conf, 'rb', 'utf-8') as f:
-            tables.append(BigQueryTable.from_dict(yaml.load(f)))
+        tables.append(load_table(conf))
     if tables:
         echo('------------------------------------------------------------------------')
         echo()

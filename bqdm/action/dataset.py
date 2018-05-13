@@ -59,25 +59,23 @@ class DatasetAction(object):
         echo('Load dataset: ' + dataset.path)
         return dataset
 
-    def list_datasets(self, dataset_id=None):
+    def list_datasets(self, include_datasets=(), exclude_datasets=()):
         datasets = []
-        if dataset_id:
-            datasets.append(BigQueryDataset.from_dataset(self.get_dataset(dataset_id)))
-        else:
-            for dataset in self._client.list_datasets():
-                # TODO ThreadPoolExecutor
-                datasets.append(BigQueryDataset.from_dataset(
-                    self.get_dataset(dataset.dataset_id)))
+        if not include_datasets:
+            include_datasets = [d.dataset_id for d in self._client.list_datasets()]
+        for d in set(include_datasets) - set(exclude_datasets):
+            # TODO ThreadPoolExecutor
+            datasets.append(BigQueryDataset.from_dataset(self.get_dataset(d)))
         if datasets:
             echo('------------------------------------------------------------------------')
             echo()
         return datasets
 
-    def export(self, output_dir, dataset_id=None):
+    def export(self, output_dir, include_datasets=(), exclude_datasets=()):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        datasets = self.list_datasets(dataset_id)
+        datasets = self.list_datasets(include_datasets, exclude_datasets)
         for dataset in datasets:
             data = dump(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
