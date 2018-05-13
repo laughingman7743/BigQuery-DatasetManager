@@ -88,36 +88,39 @@ class DatasetAction(object):
         echo()
         return datasets
 
-    def _add(self, model):
+    def _add(self, model, prefix='  ', fg='green'):
         dataset = BigQueryDataset.to_dataset(self._client.project, model)
-        echo('  Adding... {0}'.format(dataset.path), fg='green', no_color=self.no_color)
-        echo_dump(model)
+        echo('Adding... {0}'.format(dataset.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
+        echo_dump(model, prefix=prefix + '  ', fg=fg, no_color=self.no_color)
         self._client.create_dataset(dataset)
         self._client.update_dataset(dataset, [
             'access_entries'
         ])
         echo()
 
-    def plan_add(self, source, target):
+    def plan_add(self, source, target, prefix='  ', fg='green'):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
-            echo('  + {0}'.format(dataset.dataset_id), fg='green', no_color=self.no_color)
-            echo_dump(dataset)
+            echo('+ {0}'.format(dataset.dataset_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
+            echo_dump(dataset, prefix=prefix + '  ', fg=fg, no_color=self.no_color)
             echo()
         return count
 
-    def add(self, source, target):
+    def add(self, source, target, prefix='  ', fg='green'):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
-            self._add(dataset)
+            self._add(dataset, prefix, fg)
         return count
 
-    def _change(self, source_model, target_model):
+    def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
         dataset = BigQueryDataset.to_dataset(self._client.project, target_model)
-        echo('  Changing... {0}'.format(dataset.path), fg='yellow', no_color=self.no_color)
-        echo_ndiff(source_model, target_model)
+        echo('Changing... {0}'.format(dataset.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
+        echo_ndiff(source_model, target_model, prefix=prefix + '  ', fg=fg)
         source_labels = source_model.labels
         if source_labels:
             labels = dataset.labels.copy()
@@ -134,35 +137,38 @@ class DatasetAction(object):
         ])
         echo()
 
-    def plan_change(self, source, target):
+    def plan_change(self, source, target, prefix='  ', fg='yellow'):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
-            echo('  ~ {0}'.format(dataset.dataset_id), fg='yellow', no_color=self.no_color)
+            echo('~ {0}'.format(dataset.dataset_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
             source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            echo_ndiff(source_dataset, dataset)
+            echo_ndiff(source_dataset, dataset, prefix=prefix + '  ', fg=fg)
             echo()
         return count
 
-    def change(self, source, target):
+    def change(self, source, target, prefix='  ', fg='yellow'):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
             source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            self._change(source_dataset, dataset)
+            self._change(source_dataset, dataset, prefix, fg)
         return count
 
-    def _destroy(self, model):
+    def _destroy(self, model, prefix='  ', fg='red'):
         datasetted = BigQueryDataset.to_dataset(self._client.project, model)
-        echo('  Destroying... {0}'.format(datasetted.path), fg='red', no_color=self.no_color)
+        echo('Destroying... {0}'.format(datasetted.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
         self._client.delete_dataset(datasetted)
         echo()
 
-    def plan_destroy(self, source, target):
+    def plan_destroy(self, source, target, prefix='  ', fg='red'):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            echo('  - {0}'.format(dataset.dataset_id), fg='red', no_color=self.no_color)
+            echo('  - {0}'.format(dataset.dataset_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
             echo()
         return count
 
@@ -173,17 +179,18 @@ class DatasetAction(object):
             self._destroy(dataset)
         return count
 
-    def plan_intersection_destroy(self, source, target):
+    def plan_intersection_destroy(self, source, target, prefix='  ', fg='red'):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            echo('  - {0}'.format(dataset.dataset_id), fg='red', no_color=self.no_color)
+            echo('- {0}'.format(dataset.dataset_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
             echo()
         return count
 
-    def intersection_destroy(self, source, target):
+    def intersection_destroy(self, source, target, prefix='  ', fg='red'):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            self._destroy(dataset)
+            self._destroy(dataset, prefix, fg)
         return count

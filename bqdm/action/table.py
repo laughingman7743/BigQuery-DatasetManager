@@ -110,7 +110,7 @@ class TableAction(object):
         results = [s for s in source if s.table_id in table_ids]
         return len(results), tuple(results)
 
-    def migrate(self, source_table, target_table):
+    def migrate(self, source_table, target_table, prefix='    ', fg='yellow'):
         if self._migration_mode in [SchemaMigrationMode.SELECT_INSERT_BACKUP,
                                     SchemaMigrationMode.REPLACE_BACKUP]:
             self.backup(source_table.table_id)
@@ -124,17 +124,17 @@ class TableAction(object):
             tmp_table = self.create_temporary_table(target_table)
             query_field = TableAction.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
-            self._destroy(target_table)
-            self._add(target_table)
+            self._destroy(target_table, prefix, fg)
+            self._add(target_table, prefix, fg)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
-            self._destroy(tmp_table)
+            self._destroy(tmp_table, prefix, fg)
         elif self._migration_mode in [SchemaMigrationMode.DROP_CREATE]:
-            self._destroy(target_table)
-            self._add(target_table)
+            self._destroy(target_table, prefix, fg)
+            self._add(target_table, prefix, fg)
         else:
             raise ValueError('Unknown migration mode.')
 
-    def backup(self, source_table_id):
+    def backup(self, source_table_id, prefix='    ', fg='yellow'):
         source_table = self.dataset.table(source_table_id)
         backup_table_id = 'backup_{source_table_id}_{timestamp}'.format(
             source_table_id=source_table_id,
@@ -143,14 +143,16 @@ class TableAction(object):
         job_config = CopyJobConfig()
         job_config.create_disposition = CreateDisposition.CREATE_IF_NEEDED
         job = self._client.copy_table(source_table, backup_table, job_config=job_config)
-        echo('    Backing up... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
+        echo('Backing up... {0}'.format(job.job_id),
+             prefix=prefix, fg=fg, no_color=self.no_color)
         job.result()
         assert job.state == 'DONE'
         error_result = job.error_result
         if error_result:
             raise RuntimeError(job.errors)
 
-    def select_insert(self, source_table_id, destination_table_id, query_field):
+    def select_insert(self, source_table_id, destination_table_id, query_field,
+                      prefix='    ', fg='yellow'):
         query = 'SELECT {query_field} FROM {dataset_id}.{source_table_id}'.format(
             query_field=query_field,
             dataset_id=self._dataset_ref.dataset_id,
@@ -162,8 +164,10 @@ class TableAction(object):
         job_config.write_disposition = WriteDisposition.WRITE_TRUNCATE
         job_config.destination = destination_table
         job = self._client.query(query, job_config)
-        echo('    Inserting... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
-        echo('      {0}'.format(job.query), fg='yellow', no_color=self.no_color)
+        echo('Inserting... {0}'.format(job.job_id),
+             prefix=prefix, fg=fg, no_color=self.no_color)
+        echo('  {0}'.format(job.query),
+             prefix=prefix, fg=fg, no_color=self.no_color)
         job.result()
         assert job.state == 'DONE'
         error_result = job.error_result
@@ -246,33 +250,36 @@ class TableAction(object):
             echo()
         return tables
 
-    def _add(self, model):
+    def _add(self, model, prefix='  ', fg='green'):
         table = BigQueryTable.to_table(self._dataset_ref, model)
-        echo('  Adding... {0}'.format(table.path), fg='green', no_color=self.no_color)
-        echo_dump(model)
+        echo('Adding... {0}'.format(table.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
+        echo_dump(model, prefix=prefix + '  ', fg=fg, no_color=self.no_color)
         self._client.create_table(table)
         echo()
 
-    def plan_add(self, source, target):
+    def plan_add(self, source, target, prefix='  ', fg='green'):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
-            echo('  + {0}'.format(table.table_id), fg='green', no_color=self.no_color)
-            echo_dump(table)
+            echo('+ {0}'.format(table.table_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
+            echo_dump(table, prefix=prefix + '  ', fg=fg, no_color=self.no_color)
             echo()
         return count
 
-    def add(self, source, target):
+    def add(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
-            self._add(table)
+            self._add(table, prefix, fg)
         return count
 
-    def _change(self, source_model, target_model):
+    def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
         table = BigQueryTable.to_table(self._dataset_ref, target_model)
-        echo('  Changing... {0}'.format(table.path), fg='yellow', no_color=self.no_color)
-        echo_ndiff(source_model, target_model)
+        echo('Changing... {0}'.format(table.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
+        echo_ndiff(source_model, target_model, prefix=prefix + '  ', fg=fg)
         source_labels = source_model.labels
         if source_labels:
             labels = table.labels.copy()
@@ -298,41 +305,44 @@ class TableAction(object):
         ])
         echo()
 
-    def plan_change(self, source, target):
+    def plan_change(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
-            echo('  ~ {0}'.format(table.table_id), fg='yellow', no_color=self.no_color)
+            echo('~ {0}'.format(table.table_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
             source_table = next((s for s in source if s.table_id == table.table_id), None)
-            echo_ndiff(source_table, table)
+            echo_ndiff(source_table, table, prefix=prefix + ' ', fg=fg)
             echo()
         return count
 
-    def change(self, source, target):
+    def change(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
             source_table = next((s for s in source if s.table_id == table.table_id), None)
-            self._change(source_table, table)
+            self._change(source_table, table, prefix, fg)
         return count
 
-    def _destroy(self, model):
+    def _destroy(self, model, prefix='  ', fg='red'):
         table = BigQueryTable.to_table(self._dataset_ref, model)
-        echo('  Destroying... {0}'.format(table.path), fg='red', no_color=self.no_color)
+        echo('Destroying... {0}'.format(table.path),
+             prefix=prefix, fg=fg, no_color=self.no_color)
         self._client.delete_table(table)
         echo()
 
-    def plan_destroy(self, source, target):
+    def plan_destroy(self, source, target, prefix='  ', fg='red'):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
         for table in tables:
-            echo('  - {0}'.format(table.table_id), fg='red', no_color=self.no_color)
+            echo('- {0}'.format(table.table_id),
+                 prefix=prefix, fg=fg, no_color=self.no_color)
             echo()
         return count
 
-    def destroy(self, source, target):
+    def destroy(self, source, target, prefix='  ', fg='red'):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
         for table in tables:
-            self._destroy(table)
+            self._destroy(table, prefix, fg)
         return count

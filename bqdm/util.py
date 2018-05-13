@@ -83,14 +83,14 @@ def echo(text=None, prefix='', fg=None, no_color=False):
         click.secho('{prefix}{text}'.format(prefix=prefix, text=text), fg=fg)
 
 
-def echo_dump(data):
+def echo_dump(data, prefix='    ', fg=None, no_color=False):
     for line in dump(data).splitlines():
-        echo(line, prefix='    ')
+        echo(line, prefix=prefix, fg=fg, no_color=no_color)
 
 
-def echo_ndiff(source, target, fg='yellow', no_color=False):
+def echo_ndiff(source, target, prefix='    ', fg='yellow', no_color=False):
     diff = ndiff(source, target)
     for d in diff:
-        echo(d, prefix='    ', fg=fg, no_color=no_color)
+        echo(d, prefix=prefix, fg=fg, no_color=no_color)
     if diff:
         echo()
