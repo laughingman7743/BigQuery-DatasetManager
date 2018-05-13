@@ -78,7 +78,7 @@ class TableAction(object):
 
     @property
     def backup_dataset(self):
-        return self._client.get_dataset(self._dataset_ref)
+        return self._client.get_dataset(self._backup_dataset_ref)
 
     @property
     def exists_backup_dataset(self):
