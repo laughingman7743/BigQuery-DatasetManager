@@ -6,13 +6,12 @@ import logging
 import os
 import sys
 
-import click
 from future.utils import iteritems
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
 from bqdm.model.dataset import BigQueryDataset
-from bqdm.util import dump, echo_dump, echo_ndiff
+from bqdm.util import dump, echo, echo_dump, echo_ndiff
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -21,11 +20,12 @@ _logger.setLevel(logging.INFO)
 
 class DatasetAction(object):
 
-    def __init__(self, project=None, credential_file=None, debug=False):
+    def __init__(self, project=None, credential_file=None, no_color=False, debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self.client = bigquery.Client(project, credentials)
+        self.no_color = no_color
         if debug:
             _logger.setLevel(logging.DEBUG)
 
@@ -56,7 +56,7 @@ class DatasetAction(object):
     def get_dataset(self, dataset_id):
         dataset_ref = self.client.dataset(dataset_id)
         dataset = self.client.get_dataset(dataset_ref)
-        click.echo('Load dataset: ' + dataset.path)
+        echo('Load dataset: ' + dataset.path)
         return dataset
 
     def list_datasets(self, dataset_id=None):
@@ -69,8 +69,8 @@ class DatasetAction(object):
                 datasets.append(BigQueryDataset.from_dataset(
                     self.get_dataset(dataset.dataset_id)))
         if datasets:
-            click.echo('------------------------------------------------------------------------')
-            click.echo()
+            echo('------------------------------------------------------------------------')
+            echo()
         return datasets
 
     def export(self, output_dir, dataset_id=None):
@@ -82,29 +82,29 @@ class DatasetAction(object):
             data = dump(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id))
-            click.echo('Export dataset config: {0}'.format(export_path))
+            echo('Export dataset config: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
-        click.echo()
+        echo()
         return datasets
 
     def _add(self, model):
         dataset = BigQueryDataset.to_dataset(self.client.project, model)
-        click.secho('  Adding... {0}'.format(dataset.path), fg='green')
+        echo('  Adding... {0}'.format(dataset.path), fg='green', no_color=self.no_color)
         echo_dump(model)
         self.client.create_dataset(dataset)
         self.client.update_dataset(dataset, [
             'access_entries'
         ])
-        click.echo()
+        echo()
 
     def plan_add(self, source, target):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  + {0}'.format(dataset.dataset_id), fg='green')
+            echo('  + {0}'.format(dataset.dataset_id), fg='green', no_color=self.no_color)
             echo_dump(dataset)
-            click.echo()
+            echo()
         return count
 
     def add(self, source, target):
@@ -116,7 +116,7 @@ class DatasetAction(object):
 
     def _change(self, source_model, target_model):
         dataset = BigQueryDataset.to_dataset(self.client.project, target_model)
-        click.secho('  Changing... {0}'.format(dataset.path), fg='yellow')
+        echo('  Changing... {0}'.format(dataset.path), fg='yellow', no_color=self.no_color)
         echo_ndiff(source_model, target_model)
         source_labels = source_model.labels
         if source_labels:
@@ -132,16 +132,16 @@ class DatasetAction(object):
             'labels',
             'access_entries'
         ])
-        click.echo()
+        echo()
 
     def plan_change(self, source, target):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  ~ {0}'.format(dataset.dataset_id), fg='yellow')
+            echo('  ~ {0}'.format(dataset.dataset_id), fg='yellow', no_color=self.no_color)
             source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
             echo_ndiff(source_dataset, dataset)
-            click.echo()
+            echo()
         return count
 
     def change(self, source, target):
@@ -154,16 +154,16 @@ class DatasetAction(object):
 
     def _destroy(self, model):
         datasetted = BigQueryDataset.to_dataset(self.client.project, model)
-        click.secho('  Destroying... {0}'.format(datasetted.path), fg='red')
+        echo('  Destroying... {0}'.format(datasetted.path), fg='red', no_color=self.no_color)
         self.client.delete_dataset(datasetted)
-        click.echo()
+        echo()
 
     def plan_destroy(self, source, target):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  - {0}'.format(dataset.dataset_id), fg='red')
-            click.echo()
+            echo('  - {0}'.format(dataset.dataset_id), fg='red', no_color=self.no_color)
+            echo()
         return count
 
     def destroy(self, source, target):
@@ -177,8 +177,8 @@ class DatasetAction(object):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         for dataset in datasets:
-            click.secho('  - {0}'.format(dataset.dataset_id), fg='red')
-            click.echo()
+            echo('  - {0}'.format(dataset.dataset_id), fg='red', no_color=self.no_color)
+            echo()
         return count
 
     def intersection_destroy(self, source, target):

@@ -27,11 +27,6 @@ def dump(data):
                      allow_unicode=True, canonical=False)
 
 
-def echo_dump(data):
-    for line in dump(data).splitlines():
-        click.echo('    {0}'.format(line))
-
-
 def list_local_datasets(conf_dir):
     from bqdm.model.dataset import BigQueryDataset
 
@@ -41,12 +36,12 @@ def list_local_datasets(conf_dir):
     datasets = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        click.echo('Load dataset config: {0}'.format(conf))
+        echo('Load dataset config: {0}'.format(conf))
         with codecs.open(conf, 'rb', 'utf-8') as f:
             datasets.append(BigQueryDataset.from_dict(yaml.load(f)))
     if datasets:
-        click.echo('------------------------------------------------------------------------')
-        click.echo()
+        echo('------------------------------------------------------------------------')
+        echo()
     return datasets
 
 
@@ -61,12 +56,12 @@ def list_local_tables(conf_dir, dataset_id):
     tables = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        click.echo('Load table config: {0}'.format(conf))
+        echo('Load table config: {0}'.format(conf))
         with codecs.open(conf, 'rb', 'utf-8') as f:
             tables.append(BigQueryTable.from_dict(yaml.load(f)))
     if tables:
-        click.echo('------------------------------------------------------------------------')
-        click.echo()
+        echo('------------------------------------------------------------------------')
+        echo()
     return tables
 
 
@@ -75,10 +70,27 @@ def ndiff(source, target):
                          dump(target).splitlines())
 
 
-def echo_ndiff(source, target, fg='yellow'):
-    for d in ndiff(source, target):
-        click.secho('    {0}'.format(d), fg=fg)
-
-
 def parse_expires(value):
     return parse(value)
+
+
+def echo(text=None, prefix='', fg=None, no_color=False):
+    if not text:
+        click.echo()
+    elif no_color:
+        click.echo('{prefix}{text}'.format(prefix=prefix, text=text))
+    else:
+        click.secho('{prefix}{text}'.format(prefix=prefix, text=text), fg=fg)
+
+
+def echo_dump(data):
+    for line in dump(data).splitlines():
+        echo(line, prefix='    ')
+
+
+def echo_ndiff(source, target, fg='yellow', no_color=False):
+    diff = ndiff(source, target)
+    for d in diff:
+        echo(d, prefix='    ', fg=fg, no_color=no_color)
+    if diff:
+        echo()

@@ -13,6 +13,7 @@ HELP_COMMAND_APPLY_DESTROY = 'Destroy managed datasets.'
 
 HELP_OPTION_CREDENTIAL_FILE = 'Location of credential file for service accounts.'
 HELP_OPTION_PROJECT = 'Project ID for the project which you’d like to manage with.'
+HELP_OPTION_COLOR = 'Enables output with coloring.'
 HELP_OPTION_DEBUG = 'Debug output management.'
 HELP_OPTION_OUTPUT_DIR = 'Directory Path to output YAML files.'
 HELP_OPTION_CONF_DIR = 'Directory path where YAML files located.'

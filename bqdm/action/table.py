@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-import click
 from future.utils import iteritems
 from google.cloud import bigquery
 from google.cloud.bigquery.job import (CopyJobConfig, CreateDisposition, QueryJobConfig,
@@ -20,7 +19,7 @@ from google.oauth2 import service_account
 
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import dump, echo_dump, echo_ndiff
+from bqdm.util import dump, echo, echo_dump, echo_ndiff
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -39,7 +38,7 @@ class SchemaMigrationMode(Enum):
 class TableAction(object):
 
     def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None,
-                 project=None, credential_file=None, debug=False):
+                 project=None, credential_file=None, no_color=False, debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
@@ -53,6 +52,7 @@ class TableAction(object):
             self.migration_mode = SchemaMigrationMode(migration_mode)
         else:
             self.migration_mode = SchemaMigrationMode.SELECT_INSERT
+        self.no_color = no_color
         if debug:
             _logger.setLevel(logging.DEBUG)
 
@@ -131,7 +131,7 @@ class TableAction(object):
         job_config = CopyJobConfig()
         job_config.create_disposition = CreateDisposition.CREATE_IF_NEEDED
         job = self.client.copy_table(source_table, backup_table, job_config=job_config)
-        click.secho('    Backing up... {0}'.format(job.job_id), fg='yellow')
+        echo('    Backing up... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
         job.result()
         assert job.state == 'DONE'
         error_result = job.error_result
@@ -150,8 +150,8 @@ class TableAction(object):
         job_config.write_disposition = WriteDisposition.WRITE_TRUNCATE
         job_config.destination = destination_table
         job = self.client.query(query, job_config)
-        click.secho('    Inserting... {0}'.format(job.job_id), fg='yellow')
-        click.secho('      {0}'.format(job.query), fg='yellow')
+        echo('    Inserting... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
+        echo('      {0}'.format(job.query), fg='yellow', no_color=self.no_color)
         job.result()
         assert job.state == 'DONE'
         error_result = job.error_result
@@ -192,9 +192,10 @@ class TableAction(object):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
-        table = BigQueryTable.to_table(self.dataset_ref, model)
-        click.secho('    Temporary table creating... {0}'.format(table.path), fg='yellow')
-        self.client.create_table(table)
+        tmp_table = BigQueryTable.to_table(self.dataset_ref, tmp_table_model)
+        echo('    Temporary table creating... {0}'.format(tmp_table.path),
+             fg='yellow', no_color=self.no_color)
+        self.client.create_table(tmp_table)
         return tmp_table_model
 
     def list_tables(self):
@@ -205,11 +206,11 @@ class TableAction(object):
         for table in self.client.list_tables(self.dataset):
             table_ref = self.dataset.table(table.table_id)
             table_detail = self.client.get_table(table_ref)
-            click.echo('Load table: ' + table_detail.path)
+            echo('Load table: ' + table_detail.path)
             tables.append(BigQueryTable.from_table(table_detail))
         if tables:
-            click.echo('------------------------------------------------------------------------')
-            click.echo()
+            echo('------------------------------------------------------------------------')
+            echo()
         return tables
 
     def export(self, output_dir):
@@ -222,7 +223,7 @@ class TableAction(object):
             data = dump(BigQueryTable.from_table(table))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(table.table_id))
-            click.echo('Export table config: {0}'.format(export_path))
+            echo('Export table config: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
         if not tables:
@@ -230,23 +231,23 @@ class TableAction(object):
             if not os.path.exists(keep_file):
                 open(keep_file, 'a').close()
         else:
-            click.echo()
+            echo()
         return tables
 
     def _add(self, model):
         table = BigQueryTable.to_table(self.dataset_ref, model)
-        click.secho('  Adding... {0}'.format(table.path), fg='green')
+        echo('  Adding... {0}'.format(table.path), fg='green', no_color=self.no_color)
         echo_dump(model)
         self.client.create_table(table)
-        click.echo()
+        echo()
 
     def plan_add(self, source, target):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         for table in tables:
-            click.secho('  + {0}'.format(table.table_id), fg='green')
+            echo('  + {0}'.format(table.table_id), fg='green', no_color=self.no_color)
             echo_dump(table)
-            click.echo()
+            echo()
         return count
 
     def add(self, source, target):
@@ -258,7 +259,7 @@ class TableAction(object):
 
     def _change(self, source_model, target_model):
         table = BigQueryTable.to_table(self.dataset_ref, target_model)
-        click.secho('  Changing... {0}'.format(table.path), fg='yellow')
+        echo('  Changing... {0}'.format(table.path), fg='yellow', no_color=self.no_color)
         echo_ndiff(source_model, target_model)
         source_labels = source_model.labels
         if source_labels:
@@ -267,8 +268,13 @@ class TableAction(object):
                 if k not in labels.keys():
                     labels[k] = None
             table.labels = labels
-        # TODO location change & partitioning_type change
-        if target_model.schema != source_model.schema:
+        if target_model.partitioning_type != source_model.partitioning_type:
+            assert self.migration_mode not in [
+                SchemaMigrationMode.SELECT_INSERT,
+                SchemaMigrationMode.SELECT_INSERT_BACKUP],\
+                'Migration mode: `{0}` not supported.'.format(self.migration_mode.value)
+        if target_model.schema != source_model.schema or \
+                target_model.partitioning_type != source_model.partitioning_type:
             self.migrate(source_model, target_model)
         self.client.update_table(table, [
             'friendly_name',
@@ -278,16 +284,16 @@ class TableAction(object):
             'view_query',
             'labels',
         ])
-        click.echo()
+        echo()
 
     def plan_change(self, source, target):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
         for table in tables:
-            click.secho('  ~ {0}'.format(table.table_id), fg='yellow')
+            echo('  ~ {0}'.format(table.table_id), fg='yellow', no_color=self.no_color)
             source_table = next((s for s in source if s.table_id == table.table_id), None)
             echo_ndiff(source_table, table)
-            click.echo()
+            echo()
         return count
 
     def change(self, source, target):
@@ -300,16 +306,16 @@ class TableAction(object):
 
     def _destroy(self, model):
         table = BigQueryTable.to_table(self.dataset_ref, model)
-        click.secho('  Destroying... {0}'.format(table.path), fg='red')
+        echo('  Destroying... {0}'.format(table.path), fg='red', no_color=self.no_color)
         self.client.delete_table(table)
-        click.echo()
+        echo()
 
     def plan_destroy(self, source, target):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
         for table in tables:
-            click.secho('  - {0}'.format(table.table_id), fg='red')
-            click.echo()
+            echo('  - {0}'.format(table.table_id), fg='red', no_color=self.no_color)
+            echo()
         return count
 
     def destroy(self, source, target):

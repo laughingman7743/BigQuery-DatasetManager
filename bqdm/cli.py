@@ -16,7 +16,7 @@ from bqdm.action.table import SchemaMigrationMode, TableAction
 from bqdm.model.dataset import BigQueryAccessEntry, BigQueryDataset
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import (list_local_datasets, list_local_tables,
+from bqdm.util import (echo, list_local_datasets, list_local_tables,
                        str_representer, tuple_representer)
 
 _logger = logging.getLogger(__name__)
@@ -38,13 +38,16 @@ yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
               help=msg.HELP_OPTION_CREDENTIAL_FILE)
 @click.option('--project', '-p', type=str, required=False,
               help=msg.HELP_OPTION_PROJECT)
+@click.option('--color/--no-color', default=True, required=False,
+              help=msg.HELP_OPTION_COLOR)
 @click.option('--debug', is_flag=True, default=False,
               help=msg.HELP_OPTION_DEBUG)
 @click.pass_context
-def cli(ctx, credential_file, project, debug):
+def cli(ctx, credential_file, project, color, debug):
     ctx.obj = dict()
     ctx.obj['credential_file'] = credential_file
     ctx.obj['project'] = project
+    ctx.obj['color'] = color
     ctx.obj['debug'] = debug
     if debug:
         _logger.setLevel(logging.DEBUG)
@@ -57,9 +60,10 @@ def cli(ctx, credential_file, project, debug):
 def export(ctx, output_dir):
     # TODO dataset option
     # TODO exclude dataset option
-    dataset_action = DatasetAction(ctx.obj['credential_file'],
-                                   ctx.obj['project'],
-                                   ctx.obj['debug'])
+    dataset_action = DatasetAction(project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
+                                   debug=ctx.obj['debug'])
     datasets = dataset_action.export(output_dir)
     for dataset in datasets:
         table_action = TableAction(dataset.dataset_id,
@@ -77,11 +81,12 @@ def export(ctx, output_dir):
 def plan(ctx, conf_dir, detailed_exitcode):
     # TODO dataset option
     # TODO exclude dataset option
-    click.echo(msg.MESSAGE_PLAN_HEADER)
+    echo(msg.MESSAGE_PLAN_HEADER)
 
-    dataset_action = DatasetAction(ctx.obj['credential_file'],
-                                   ctx.obj['project'],
-                                   ctx.obj['debug'])
+    dataset_action = DatasetAction(project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
+                                   debug=ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -95,8 +100,9 @@ def plan(ctx, conf_dir, detailed_exitcode):
         target_tables = list_local_tables(conf_dir, dataset.dataset_id)
         if target_tables is not None:
             table_action = TableAction(dataset.dataset_id,
-                                       credential_file=ctx.obj['credential_file'],
                                        project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
                                        debug=ctx.obj['debug'])
             source_tables = table_action.list_tables()
             add_table_count += table_action.plan_add(source_tables, target_tables)
@@ -105,14 +111,14 @@ def plan(ctx, conf_dir, detailed_exitcode):
 
     if not any([add_dataset_count, change_dataset_count, destroy_dataset_count,
                 add_table_count, change_table_count, destroy_table_count]):
-        click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
-        click.echo()
+        echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
+        echo()
     else:
-        click.echo(msg.MESSAGE_PLAN_SUMMARY.format(
+        echo(msg.MESSAGE_PLAN_SUMMARY.format(
             add_dataset_count + add_table_count,
             change_dataset_count + change_table_count,
             destroy_dataset_count + destroy_table_count))
-        click.echo()
+        echo()
         if detailed_exitcode:
             sys.exit(2)
 
@@ -134,9 +140,10 @@ def plan(ctx, conf_dir, detailed_exitcode):
 def apply(ctx, conf_dir, mode, backup_dataset):
     # TODO dataset option
     # TODO exclude dataset option
-    dataset_action = DatasetAction(ctx.obj['credential_file'],
-                                   ctx.obj['project'],
-                                   ctx.obj['debug'])
+    dataset_action = DatasetAction(project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
+                                   debug=ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -149,9 +156,12 @@ def apply(ctx, conf_dir, mode, backup_dataset):
     for dataset in target_datasets:
         target_tables = list_local_tables(conf_dir, dataset.dataset_id)
         if target_tables is not None:
-            table_action = TableAction(dataset.dataset_id, mode, backup_dataset,
-                                       credential_file=ctx.obj['credential_file'],
+            table_action = TableAction(dataset.dataset_id,
+                                       migration_mode=mode,
+                                       backup_dataset_id=backup_dataset,
                                        project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
                                        debug=ctx.obj['debug'])
             source_tables = table_action.list_tables()
             add_table_count += table_action.add(source_tables, target_tables)
@@ -160,14 +170,14 @@ def apply(ctx, conf_dir, mode, backup_dataset):
 
     if not any([add_dataset_count, change_dataset_count, destroy_dataset_count,
                 add_table_count, change_table_count, destroy_table_count]):
-        click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
-        click.echo()
+        echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
+        echo()
     else:
-        click.secho(msg.MESSAGE_APPLY_SUMMARY.format(
+        echo(msg.MESSAGE_APPLY_SUMMARY.format(
             add_dataset_count + add_table_count,
             change_dataset_count + change_table_count,
             destroy_dataset_count + destroy_table_count))
-        click.echo()
+        echo()
 
 
 @cli.group(help=msg.HELP_COMMAND_DESTROY)
@@ -185,11 +195,12 @@ def destroy(ctx):
 def plan_destroy(ctx, conf_dir, detailed_exitcode):
     # TODO dataset option
     # TODO exclude dataset option
-    click.echo(msg.MESSAGE_PLAN_HEADER)
+    echo(msg.MESSAGE_PLAN_HEADER)
 
-    dataset_action = DatasetAction(ctx.obj['credential_file'],
-                                   ctx.obj['project'],
-                                   ctx.obj['debug'])
+    dataset_action = DatasetAction(project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
+                                   debug=ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
@@ -199,19 +210,20 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
     destroy_table_count = 0
     for dataset in target_datasets:
         table_action = TableAction(dataset.dataset_id,
-                                   credential_file=ctx.obj['credential_file'],
                                    project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
         source_tables = table_action.list_tables()
         destroy_table_count += table_action.plan_destroy(source_tables, [])
 
     if not any([destroy_dataset_count, destroy_table_count]):
-        click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
-        click.echo()
+        echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
+        echo()
     else:
-        click.echo(msg.MESSAGE_PLAN_DESTROY_SUMMARY.format(
+        echo(msg.MESSAGE_PLAN_DESTROY_SUMMARY.format(
             destroy_dataset_count + destroy_table_count))
-        click.echo()
+        echo()
         if detailed_exitcode:
             sys.exit(2)
 
@@ -223,29 +235,31 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode):
 def apply_destroy(ctx, conf_dir):
     # TODO dataset option
     # TODO exclude dataset option
-    dataset_action = DatasetAction(ctx.obj['credential_file'],
-                                   ctx.obj['project'],
-                                   ctx.obj['debug'])
+    dataset_action = DatasetAction(project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
+                                   debug=ctx.obj['debug'])
     source_datasets = dataset_action.list_datasets()
     target_datasets = list_local_datasets(conf_dir)
 
     destroy_table_count = 0
     for dataset in target_datasets:
         table_action = TableAction(dataset.dataset_id,
-                                   credential_file=ctx.obj['credential_file'],
                                    project=ctx.obj['project'],
+                                   credential_file=ctx.obj['credential_file'],
+                                   no_color=not ctx.obj['color'],
                                    debug=ctx.obj['debug'])
         source_tables = table_action.list_tables()
         destroy_table_count += table_action.destroy(source_tables, [])
     destroy_dataset_count = dataset_action.intersection_destroy(source_datasets, target_datasets)
 
     if not any([destroy_dataset_count, destroy_table_count]):
-        click.secho(msg.MESSAGE_SUMMARY_NO_CHANGE)
-        click.echo()
+        echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
+        echo()
     else:
-        click.echo(msg.MESSAGE_APPLY_DESTROY_SUMMARY.format(
+        echo(msg.MESSAGE_APPLY_DESTROY_SUMMARY.format(
             destroy_dataset_count + destroy_table_count))
-        click.echo()
+        echo()
 
 
 if __name__ == '__main__':
