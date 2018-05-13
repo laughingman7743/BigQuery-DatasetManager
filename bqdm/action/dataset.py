@@ -24,7 +24,7 @@ class DatasetAction(object):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
-        self.client = bigquery.Client(project, credentials)
+        self._client = bigquery.Client(project, credentials)
         self.no_color = no_color
         if debug:
             _logger.setLevel(logging.DEBUG)
@@ -54,8 +54,8 @@ class DatasetAction(object):
         return len(results), tuple(results)
 
     def get_dataset(self, dataset_id):
-        dataset_ref = self.client.dataset(dataset_id)
-        dataset = self.client.get_dataset(dataset_ref)
+        dataset_ref = self._client.dataset(dataset_id)
+        dataset = self._client.get_dataset(dataset_ref)
         echo('Load dataset: ' + dataset.path)
         return dataset
 
@@ -64,7 +64,7 @@ class DatasetAction(object):
         if dataset_id:
             datasets.append(BigQueryDataset.from_dataset(self.get_dataset(dataset_id)))
         else:
-            for dataset in self.client.list_datasets():
+            for dataset in self._client.list_datasets():
                 # TODO ThreadPoolExecutor
                 datasets.append(BigQueryDataset.from_dataset(
                     self.get_dataset(dataset.dataset_id)))
@@ -89,11 +89,11 @@ class DatasetAction(object):
         return datasets
 
     def _add(self, model):
-        dataset = BigQueryDataset.to_dataset(self.client.project, model)
+        dataset = BigQueryDataset.to_dataset(self._client.project, model)
         echo('  Adding... {0}'.format(dataset.path), fg='green', no_color=self.no_color)
         echo_dump(model)
-        self.client.create_dataset(dataset)
-        self.client.update_dataset(dataset, [
+        self._client.create_dataset(dataset)
+        self._client.update_dataset(dataset, [
             'access_entries'
         ])
         echo()
@@ -115,7 +115,7 @@ class DatasetAction(object):
         return count
 
     def _change(self, source_model, target_model):
-        dataset = BigQueryDataset.to_dataset(self.client.project, target_model)
+        dataset = BigQueryDataset.to_dataset(self._client.project, target_model)
         echo('  Changing... {0}'.format(dataset.path), fg='yellow', no_color=self.no_color)
         echo_ndiff(source_model, target_model)
         source_labels = source_model.labels
@@ -125,7 +125,7 @@ class DatasetAction(object):
                 if k not in labels.keys():
                     labels[k] = None
             dataset.labels = labels
-        self.client.update_dataset(dataset, [
+        self._client.update_dataset(dataset, [
             'friendly_name',
             'description',
             'default_table_expiration_ms',
@@ -153,9 +153,9 @@ class DatasetAction(object):
         return count
 
     def _destroy(self, model):
-        datasetted = BigQueryDataset.to_dataset(self.client.project, model)
+        datasetted = BigQueryDataset.to_dataset(self._client.project, model)
         echo('  Destroying... {0}'.format(datasetted.path), fg='red', no_color=self.no_color)
-        self.client.delete_dataset(datasetted)
+        self._client.delete_dataset(datasetted)
         echo()
 
     def plan_destroy(self, source, target):

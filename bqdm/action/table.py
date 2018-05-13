@@ -42,43 +42,55 @@ class TableAction(object):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
-        self.client = bigquery.Client(project, credentials)
-        self.dataset_ref = self.client.dataset(dataset_id)
+        self._client = bigquery.Client(project, credentials)
+        self._dataset_ref = self._client.dataset(dataset_id)
         if backup_dataset_id:
-            self.backup_dataset_ref = self.client.dataset(backup_dataset_id)
+            self._backup_dataset_ref = self._client.dataset(backup_dataset_id)
         else:
-            self.backup_dataset_ref = self.dataset_ref
+            self._backup_dataset_ref = self._dataset_ref
         if migration_mode:
-            self.migration_mode = SchemaMigrationMode(migration_mode)
+            self._migration_mode = SchemaMigrationMode(migration_mode)
         else:
-            self.migration_mode = SchemaMigrationMode.SELECT_INSERT
+            self._migration_mode = SchemaMigrationMode.SELECT_INSERT
         self.no_color = no_color
         if debug:
             _logger.setLevel(logging.DEBUG)
 
     @property
+    def dataset_reference(self):
+        return self._dataset_ref
+
+    @property
     def dataset(self):
-        return self.client.get_dataset(self.dataset_ref)
+        return self._client.get_dataset(self._dataset_ref)
 
     @property
     def exists_dataset(self):
         try:
-            self.client.get_dataset(self.dataset_ref)
+            self._client.get_dataset(self._dataset_ref)
             return True
         except NotFound:
             return False
 
     @property
+    def backup_dataset_reference(self):
+        return self._backup_dataset_ref
+
+    @property
     def backup_dataset(self):
-        return self.client.get_dataset(self.dataset_ref)
+        return self._client.get_dataset(self._dataset_ref)
 
     @property
     def exists_backup_dataset(self):
         try:
-            self.client.get_dataset(self.backup_dataset_ref)
+            self._client.get_dataset(self._backup_dataset_ref)
             return True
         except NotFound:
             return False
+
+    @property
+    def migration_mode(self):
+        return self._migration_mode
 
     @staticmethod
     def get_add_tables(source, target):
@@ -99,16 +111,16 @@ class TableAction(object):
         return len(results), tuple(results)
 
     def migrate(self, source_table, target_table):
-        if self.migration_mode in [SchemaMigrationMode.SELECT_INSERT_BACKUP,
-                                   SchemaMigrationMode.REPLACE_BACKUP]:
+        if self._migration_mode in [SchemaMigrationMode.SELECT_INSERT_BACKUP,
+                                    SchemaMigrationMode.REPLACE_BACKUP]:
             self.backup(source_table.table_id)
 
-        if self.migration_mode in [SchemaMigrationMode.SELECT_INSERT,
-                                   SchemaMigrationMode.SELECT_INSERT_BACKUP]:
+        if self._migration_mode in [SchemaMigrationMode.SELECT_INSERT,
+                                    SchemaMigrationMode.SELECT_INSERT_BACKUP]:
             query_field = TableAction.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(target_table.table_id, target_table.table_id, query_field)
-        elif self.migration_mode in [SchemaMigrationMode.REPLACE,
-                                     SchemaMigrationMode.REPLACE_BACKUP]:
+        elif self._migration_mode in [SchemaMigrationMode.REPLACE,
+                                      SchemaMigrationMode.REPLACE_BACKUP]:
             tmp_table = self.create_temporary_table(target_table)
             query_field = TableAction.build_query_field(source_table.schema, target_table.schema)
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
@@ -116,7 +128,7 @@ class TableAction(object):
             self._add(target_table)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
             self._destroy(tmp_table)
-        elif self.migration_mode in [SchemaMigrationMode.DROP_CREATE]:
+        elif self._migration_mode in [SchemaMigrationMode.DROP_CREATE]:
             self._destroy(target_table)
             self._add(target_table)
         else:
@@ -130,7 +142,7 @@ class TableAction(object):
         backup_table = self.backup_dataset.table(backup_table_id)
         job_config = CopyJobConfig()
         job_config.create_disposition = CreateDisposition.CREATE_IF_NEEDED
-        job = self.client.copy_table(source_table, backup_table, job_config=job_config)
+        job = self._client.copy_table(source_table, backup_table, job_config=job_config)
         echo('    Backing up... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
         job.result()
         assert job.state == 'DONE'
@@ -141,7 +153,7 @@ class TableAction(object):
     def select_insert(self, source_table_id, destination_table_id, query_field):
         query = 'SELECT {query_field} FROM {dataset_id}.{source_table_id}'.format(
             query_field=query_field,
-            dataset_id=self.dataset_ref.dataset_id,
+            dataset_id=self._dataset_ref.dataset_id,
             source_table_id=source_table_id)
         destination_table = self.dataset.table(destination_table_id)
         job_config = QueryJobConfig()
@@ -149,7 +161,7 @@ class TableAction(object):
         job_config.use_query_cache = False
         job_config.write_disposition = WriteDisposition.WRITE_TRUNCATE
         job_config.destination = destination_table
-        job = self.client.query(query, job_config)
+        job = self._client.query(query, job_config)
         echo('    Inserting... {0}'.format(job.job_id), fg='yellow', no_color=self.no_color)
         echo('      {0}'.format(job.query), fg='yellow', no_color=self.no_color)
         job.result()
@@ -192,10 +204,10 @@ class TableAction(object):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
         tmp_table_model.table_id = tmp_table_id
-        tmp_table = BigQueryTable.to_table(self.dataset_ref, tmp_table_model)
+        tmp_table = BigQueryTable.to_table(self._dataset_ref, tmp_table_model)
         echo('    Temporary table creating... {0}'.format(tmp_table.path),
              fg='yellow', no_color=self.no_color)
-        self.client.create_table(tmp_table)
+        self._client.create_table(tmp_table)
         return tmp_table_model
 
     def list_tables(self):
@@ -203,9 +215,9 @@ class TableAction(object):
             return []
 
         tables = []
-        for table in self.client.list_tables(self.dataset):
+        for table in self._client.list_tables(self.dataset):
             table_ref = self.dataset.table(table.table_id)
-            table_detail = self.client.get_table(table_ref)
+            table_detail = self._client.get_table(table_ref)
             echo('Load table: ' + table_detail.path)
             tables.append(BigQueryTable.from_table(table_detail))
         if tables:
@@ -214,7 +226,7 @@ class TableAction(object):
         return tables
 
     def export(self, output_dir):
-        output_dir = os.path.join(output_dir, self.dataset_ref.dataset_id)
+        output_dir = os.path.join(output_dir, self._dataset_ref.dataset_id)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -235,10 +247,10 @@ class TableAction(object):
         return tables
 
     def _add(self, model):
-        table = BigQueryTable.to_table(self.dataset_ref, model)
+        table = BigQueryTable.to_table(self._dataset_ref, model)
         echo('  Adding... {0}'.format(table.path), fg='green', no_color=self.no_color)
         echo_dump(model)
-        self.client.create_table(table)
+        self._client.create_table(table)
         echo()
 
     def plan_add(self, source, target):
@@ -258,7 +270,7 @@ class TableAction(object):
         return count
 
     def _change(self, source_model, target_model):
-        table = BigQueryTable.to_table(self.dataset_ref, target_model)
+        table = BigQueryTable.to_table(self._dataset_ref, target_model)
         echo('  Changing... {0}'.format(table.path), fg='yellow', no_color=self.no_color)
         echo_ndiff(source_model, target_model)
         source_labels = source_model.labels
@@ -269,14 +281,14 @@ class TableAction(object):
                     labels[k] = None
             table.labels = labels
         if target_model.partitioning_type != source_model.partitioning_type:
-            assert self.migration_mode not in [
+            assert self._migration_mode not in [
                 SchemaMigrationMode.SELECT_INSERT,
                 SchemaMigrationMode.SELECT_INSERT_BACKUP],\
-                'Migration mode: `{0}` not supported.'.format(self.migration_mode.value)
+                'Migration mode: `{0}` not supported.'.format(self._migration_mode.value)
         if target_model.schema != source_model.schema or \
                 target_model.partitioning_type != source_model.partitioning_type:
             self.migrate(source_model, target_model)
-        self.client.update_table(table, [
+        self._client.update_table(table, [
             'friendly_name',
             'description',
             'expires',
@@ -305,9 +317,9 @@ class TableAction(object):
         return count
 
     def _destroy(self, model):
-        table = BigQueryTable.to_table(self.dataset_ref, model)
+        table = BigQueryTable.to_table(self._dataset_ref, model)
         echo('  Destroying... {0}'.format(table.path), fg='red', no_color=self.no_color)
-        self.client.delete_table(table)
+        self._client.delete_table(table)
         echo()
 
     def plan_destroy(self, source, target):
