@@ -56,7 +56,7 @@ class DatasetAction(object):
     def get_dataset(self, dataset_id):
         dataset_ref = self.client.dataset(dataset_id)
         dataset = self.client.get_dataset(dataset_ref)
-        click.echo('Load: ' + dataset.path)
+        click.echo('Load dataset: ' + dataset.path)
         return dataset
 
     def list_datasets(self, dataset_id=None):
@@ -68,8 +68,9 @@ class DatasetAction(object):
                 # TODO ThreadPoolExecutor
                 datasets.append(BigQueryDataset.from_dataset(
                     self.get_dataset(dataset.dataset_id)))
-        click.echo('------------------------------------------------------------------------')
-        click.echo()
+        if datasets:
+            click.echo('------------------------------------------------------------------------')
+            click.echo()
         return datasets
 
     def export(self, output_dir, dataset_id=None):
@@ -81,7 +82,7 @@ class DatasetAction(object):
             data = dump(BigQueryDataset.from_dataset(dataset))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id))
-            click.echo('Export: {0}'.format(export_path))
+            click.echo('Export dataset config: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
         click.echo()

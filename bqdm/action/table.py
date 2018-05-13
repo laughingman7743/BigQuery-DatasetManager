@@ -205,10 +205,11 @@ class TableAction(object):
         for table in self.client.list_tables(self.dataset):
             table_ref = self.dataset.table(table.table_id)
             table_detail = self.client.get_table(table_ref)
-            click.echo('Load: ' + table_detail.path)
+            click.echo('Load table: ' + table_detail.path)
             tables.append(BigQueryTable.from_table(table_detail))
-        click.echo('------------------------------------------------------------------------')
-        click.echo()
+        if tables:
+            click.echo('------------------------------------------------------------------------')
+            click.echo()
         return tables
 
     def export(self, output_dir):
@@ -221,7 +222,7 @@ class TableAction(object):
             data = dump(BigQueryTable.from_table(table))
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(table.table_id))
-            click.echo('Export: {0}'.format(export_path))
+            click.echo('Export table config: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
         if not tables:

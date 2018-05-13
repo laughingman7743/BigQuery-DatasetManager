@@ -41,11 +41,12 @@ def list_local_datasets(conf_dir):
     datasets = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        click.echo('Load: {0}'.format(conf))
+        click.echo('Load dataset config: {0}'.format(conf))
         with codecs.open(conf, 'rb', 'utf-8') as f:
             datasets.append(BigQueryDataset.from_dict(yaml.load(f)))
-    click.echo('------------------------------------------------------------------------')
-    click.echo()
+    if datasets:
+        click.echo('------------------------------------------------------------------------')
+        click.echo()
     return datasets
 
 
@@ -60,11 +61,12 @@ def list_local_tables(conf_dir, dataset_id):
     tables = []
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
-        click.echo('Load: {0}'.format(conf))
+        click.echo('Load table config: {0}'.format(conf))
         with codecs.open(conf, 'rb', 'utf-8') as f:
             tables.append(BigQueryTable.from_dict(yaml.load(f)))
-    click.echo('------------------------------------------------------------------------')
-    click.echo()
+    if tables:
+        click.echo('------------------------------------------------------------------------')
+        click.echo()
     return tables
 
 
