@@ -5,7 +5,7 @@ import functools
 import os
 
 from google.cloud import bigquery
-from google.cloud.bigquery import DatasetReference, Dataset, TableReference, Table
+from google.cloud.bigquery import Dataset, DatasetReference, Table, TableReference
 
 
 class Env(object):
