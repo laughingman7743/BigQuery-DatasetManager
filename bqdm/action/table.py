@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
 
@@ -19,7 +20,8 @@ from google.oauth2 import service_account
 
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import dump, echo, echo_dump, echo_ndiff
+from bqdm.util import (as_completed, dump, echo, echo_dump,
+                       echo_ndiff, get_parallelism)
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -37,8 +39,9 @@ class SchemaMigrationMode(Enum):
 
 class TableAction(object):
 
-    def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None,
-                 project=None, credential_file=None, no_color=False, debug=False):
+    def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None, project=None,
+                 credential_file=None, no_color=False, executor=None,
+                 parallelism=get_parallelism(), debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
@@ -53,6 +56,10 @@ class TableAction(object):
         else:
             self._migration_mode = SchemaMigrationMode.SELECT_INSERT
         self.no_color = no_color
+        if executor:
+            self._executor = executor
+        else:
+            self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
 
@@ -214,16 +221,21 @@ class TableAction(object):
         self._client.create_table(tmp_table)
         return tmp_table_model
 
+    def get_table(self, table_id):
+        table_ref = self.dataset.table(table_id)
+        table = self._client.get_table(table_ref)
+        echo('Load table: ' + table.path)
+        return table
+
     def list_tables(self):
         if not self.exists_dataset:
             return []
 
         tables = []
-        for table in self._client.list_tables(self.dataset):
-            table_ref = self.dataset.table(table.table_id)
-            table_detail = self._client.get_table(table_ref)
-            echo('Load table: ' + table_detail.path)
-            tables.append(BigQueryTable.from_table(table_detail))
+        fs = [self._executor.submit(self.get_table, t.table_id)
+              for t in self._client.list_tables(self.dataset)]
+        for r in as_completed(fs):
+            tables.append(BigQueryTable.from_table(r))
         if tables:
             echo('------------------------------------------------------------------------')
             echo()
@@ -271,8 +283,8 @@ class TableAction(object):
     def add(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
-        for table in tables:
-            self._add(table, prefix, fg)
+        fs = [self._executor.submit(self._add, table, prefix, fg) for table in tables]
+        as_completed(fs)
         return count
 
     def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
@@ -319,9 +331,10 @@ class TableAction(object):
     def change(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_change_tables(source, target)
         _logger.debug('Change tables: {0}'.format(tables))
-        for table in tables:
-            source_table = next((s for s in source if s.table_id == table.table_id), None)
-            self._change(source_table, table, prefix, fg)
+        fs = [self._executor.submit(
+            self._change, next((s for s in source if s.table_id == t.table_id), None),
+            t, prefix, fg) for t in tables]
+        as_completed(fs)
         return count
 
     def _destroy(self, model, prefix='  ', fg='red'):
@@ -343,6 +356,6 @@ class TableAction(object):
     def destroy(self, source, target, prefix='  ', fg='red'):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
-        for table in tables:
-            self._destroy(table, prefix, fg)
+        fs = [self._executor.submit(self._destroy, t, prefix, fg) for t in tables]
+        as_completed(fs)
         return count

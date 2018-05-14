@@ -5,13 +5,15 @@ import codecs
 import logging
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from future.utils import iteritems
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
 from bqdm.model.dataset import BigQueryDataset
-from bqdm.util import dump, echo, echo_dump, echo_ndiff
+from bqdm.util import (as_completed, dump, echo, echo_dump,
+                       echo_ndiff, get_parallelism)
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -20,12 +22,17 @@ _logger.setLevel(logging.INFO)
 
 class DatasetAction(object):
 
-    def __init__(self, project=None, credential_file=None, no_color=False, debug=False):
+    def __init__(self, project=None, credential_file=None, no_color=False, executor=None,
+                 parallelism=get_parallelism(), debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self._client = bigquery.Client(project, credentials)
         self.no_color = no_color
+        if executor:
+            self._executor = executor
+        else:
+            self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
 
@@ -63,9 +70,10 @@ class DatasetAction(object):
         datasets = []
         if not include_datasets:
             include_datasets = [d.dataset_id for d in self._client.list_datasets()]
-        for d in set(include_datasets) - set(exclude_datasets):
-            # TODO ThreadPoolExecutor
-            datasets.append(BigQueryDataset.from_dataset(self.get_dataset(d)))
+        fs = [self._executor.submit(self.get_dataset, d)
+              for d in set(include_datasets) - set(exclude_datasets)]
+        for r in as_completed(fs):
+            datasets.append(BigQueryDataset.from_dataset(r))
         if datasets:
             echo('------------------------------------------------------------------------')
             echo()
@@ -110,8 +118,8 @@ class DatasetAction(object):
     def add(self, source, target, prefix='  ', fg='green'):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
-        for dataset in datasets:
-            self._add(dataset, prefix, fg)
+        fs = [self._executor.submit(self._add, d, prefix, fg) for d in datasets]
+        as_completed(fs)
         return count
 
     def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
@@ -149,9 +157,10 @@ class DatasetAction(object):
     def change(self, source, target, prefix='  ', fg='yellow'):
         count, datasets = self.get_change_datasets(source, target)
         _logger.debug('Change datasets: {0}'.format(datasets))
-        for dataset in datasets:
-            source_dataset = next((s for s in source if s.dataset_id == dataset.dataset_id), None)
-            self._change(source_dataset, dataset, prefix, fg)
+        fs = [self._executor.submit(
+            self._change, next((s for s in source if s.dataset_id == d.dataset_id), None),
+            d, prefix, fg) for d in datasets]
+        as_completed(fs)
         return count
 
     def _destroy(self, model, prefix='  ', fg='red'):
@@ -173,8 +182,8 @@ class DatasetAction(object):
     def destroy(self, source, target):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
-        for dataset in datasets:
-            self._destroy(dataset)
+        fs = [self._executor.submit(self._destroy, d) for d in datasets]
+        as_completed(fs)
         return count
 
     def plan_intersection_destroy(self, source, target, prefix='  ', fg='red'):
@@ -189,6 +198,6 @@ class DatasetAction(object):
     def intersection_destroy(self, source, target, prefix='  ', fg='red'):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
-        for dataset in datasets:
-            self._destroy(dataset, prefix, fg)
+        fs = [self._executor.submit(self._destroy, d, prefix, fg) for d in datasets]
+        as_completed(fs)
         return count

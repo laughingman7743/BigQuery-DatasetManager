@@ -3,12 +3,29 @@ from __future__ import absolute_import
 
 import codecs
 import difflib
+import functools
 import glob
 import os
-from dateutil.parser import parse
+import threading
+from concurrent import futures
 
 import click
 import yaml
+from dateutil.parser import parse
+
+try:
+    from multiprocessing import cpu_count
+except ImportError:
+    def cpu_count():
+        return None
+
+
+def get_parallelism():
+    return (cpu_count() or 1) * 5
+
+
+def as_completed(fs):
+    return (f.result() for f in futures.as_completed(fs))
 
 
 def str_representer(dumper, data):
@@ -20,6 +37,19 @@ def str_representer(dumper, data):
 
 def tuple_representer(dumper, data):
     return dumper.represent_sequence('tag:yaml.org,2002:seq', data)
+
+
+def synchronized(wrapped):
+    """The missing @synchronized decorator
+
+    https://git.io/vydTA"""
+    _lock = threading.RLock()
+
+    @functools.wraps(wrapped)
+    def _wrapper(*args, **kwargs):
+        with _lock:
+            return wrapped(*args, **kwargs)
+    return _wrapper
 
 
 def dump(data):
@@ -88,7 +118,7 @@ def parse_expires(value):
     return parse(value)
 
 
-def echo(text=None, prefix='', fg=None, no_color=False):
+def _echo(text=None, prefix='', fg=None, no_color=False):
     if not text:
         click.echo()
     elif no_color:
@@ -97,14 +127,21 @@ def echo(text=None, prefix='', fg=None, no_color=False):
         click.secho('{prefix}{text}'.format(prefix=prefix, text=text), fg=fg)
 
 
+@synchronized
+def echo(text=None, prefix='', fg=None, no_color=False):
+    _echo(text=text, prefix=prefix, fg=fg, no_color=no_color)
+
+
+@synchronized
 def echo_dump(data, prefix='    ', fg=None, no_color=False):
     for line in dump(data).splitlines():
-        echo(line, prefix=prefix, fg=fg, no_color=no_color)
+        _echo(line, prefix=prefix, fg=fg, no_color=no_color)
 
 
+@synchronized
 def echo_ndiff(source, target, prefix='    ', fg='yellow', no_color=False):
     diff = ndiff(source, target)
     for d in diff:
-        echo(d, prefix=prefix, fg=fg, no_color=no_color)
+        _echo(d, prefix=prefix, fg=fg, no_color=no_color)
     if diff:
-        echo()
+        _echo()
