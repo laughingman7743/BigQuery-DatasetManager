@@ -35,6 +35,7 @@ class SchemaMigrationMode(Enum):
     REPLACE = 'replace'
     REPLACE_BACKUP = 'replace_backup'
     DROP_CREATE = 'drop_create'
+    DROP_CREATE_BACKUP = 'drop_create_backup'
 
 
 class TableAction(object):
@@ -122,7 +123,8 @@ class TableAction(object):
 
     def migrate(self, source_table, target_table, prefix='    ', fg='yellow'):
         if self._migration_mode in [SchemaMigrationMode.SELECT_INSERT_BACKUP,
-                                    SchemaMigrationMode.REPLACE_BACKUP]:
+                                    SchemaMigrationMode.REPLACE_BACKUP,
+                                    SchemaMigrationMode.DROP_CREATE_BACKUP]:
             self.backup(source_table.table_id)
 
         if self._migration_mode in [SchemaMigrationMode.SELECT_INSERT,
@@ -138,7 +140,8 @@ class TableAction(object):
             self._add(target_table, prefix, fg)
             self.select_insert(tmp_table.table_id, target_table.table_id, '*')
             self._destroy(tmp_table, prefix, fg)
-        elif self._migration_mode in [SchemaMigrationMode.DROP_CREATE]:
+        elif self._migration_mode in [SchemaMigrationMode.DROP_CREATE,
+                                      SchemaMigrationMode.DROP_CREATE_BACKUP]:
             self._destroy(target_table, prefix, fg)
             self._add(target_table, prefix, fg)
         else:

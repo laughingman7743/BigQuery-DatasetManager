@@ -205,7 +205,8 @@ def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
     SchemaMigrationMode.SELECT_INSERT_BACKUP.value,
     SchemaMigrationMode.REPLACE.value,
     SchemaMigrationMode.REPLACE_BACKUP.value,
-    SchemaMigrationMode.DROP_CREATE.value]),
+    SchemaMigrationMode.DROP_CREATE.value,
+    SchemaMigrationMode.DROP_CREATE_BACKUP.value]),
               required=True, default=SchemaMigrationMode.SELECT_INSERT.value,
               help=msg.HELP_OPTION_MIGRATION_MODE)
 @click.option('--backup-dataset', '-b', type=str, required=False,

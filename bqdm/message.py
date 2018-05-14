@@ -16,22 +16,20 @@ HELP_OPTION_PROJECT = 'Project ID for the project which you’d like to manage w
 HELP_OPTION_COLOR = 'Enables output with coloring.'
 HELP_OPTION_PARALLELISM = 'Limit the number of concurrent operation.'
 HELP_OPTION_DEBUG = 'Debug output management.'
-HELP_OPTION_OUTPUT_DIR = 'Directory Path to output YAML files.'
+HELP_OPTION_OUTPUT_DIR = 'Directory path to output YAML files.'
 HELP_OPTION_CONF_DIR = 'Directory path where YAML files located.'
-HELP_OPTION_DETAILED_EXIT_CODE = """Return a detailed exit code when the command exits. When provided,
-this argument changes the exit codes and their meanings to provide
+HELP_OPTION_DETAILED_EXIT_CODE = """Return a detailed exit code when the command exits.
+When provided, this argument changes the exit codes and their meanings to provide
 more granular information about what the resulting plan contains:
 0 = Succeeded with empty diff
 1 = Error
 2 = Succeeded with non-empty diff"""
-HELP_OPTION_MIGRATION_MODE = """
-"""  # TODO
-HELP_OPTION_DATASET = """
-"""  # TODO
-HELP_OPTION_BACKUP_DATASET = """
-"""  # TODO
-HELP_OPTION_EXCLUDE_DATASET = """
-"""  # TODO
+HELP_OPTION_MIGRATION_MODE = """Specify the migration mode when changing the schema.
+Choice from `select_insert`, `select_insert_backup`, `replace`, r`eplace_backup`,
+`drop_create`, `drop_create_backup`."""
+HELP_OPTION_DATASET = 'Specify the ID of the dataset to manage.'
+HELP_OPTION_BACKUP_DATASET = 'Specify the ID of the dataset to store the backup at migration'
+HELP_OPTION_EXCLUDE_DATASET = 'Specify the ID of the dataset to exclude from managed.'
 
 MESSAGE_PLAN_HEADER = """An execution plan has been generated and is shown below.
 
