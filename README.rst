@@ -249,14 +249,14 @@ Directory structure
 .. code::
 
     .
-    ├── dataset1        # Directory storing the table configuration file of dataset1
-    │   ├── table1.yml  # Configuration file of table1 in dataset1
-    │   └── table2.yml  # Configuration file of table2 in dataset1
-    ├── dataset1.yml    # Configuration file of dataset1
-    ├── dataset2        # Directory storing the table configuration file of dataset2
+    ├── dataset1        # Directory storing the table configuration file of dataset1.
+    │   ├── table1.yml  # Configuration file of table1 in dataset1.
+    │   └── table2.yml  # Configuration file of table2 in dataset1.
+    ├── dataset1.yml    # Configuration file of dataset1.
+    ├── dataset2        # Directory storing the table configuration file of dataset2.
     │   └── .gitkeep    # When keeping a directory, dataset2 is empty.
-    ├── dataset2.yml    # Configuration file of dataset2
-    └── dataset3.yml    # Configuration file of dataset3
+    ├── dataset2.yml    # Configuration file of dataset2.
+    └── dataset3.yml    # Configuration file of dataset3. This dataset does not manage the table.
 
 NOTE: If you do not want to manage the table, delete the directory with the same name as the dataset name.
 
@@ -428,12 +428,12 @@ LIMITATIONS: TODO
 drop_create
 ~~~~~~~~~~~
 
-# TODO
+#. TODO
 
 drop_create_backup
 ~~~~~~~~~~~~~~~~~~
 
-# TODO
+#. TODO
 
 Authentication
 --------------
