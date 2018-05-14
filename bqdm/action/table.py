@@ -40,8 +40,8 @@ class SchemaMigrationMode(Enum):
 class TableAction(object):
 
     def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None, project=None,
-                 credential_file=None, no_color=False, executor=None,
-                 parallelism=get_parallelism(), debug=False):
+                 credential_file=None, no_color=False, parallelism=get_parallelism(),
+                 debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
@@ -56,12 +56,15 @@ class TableAction(object):
         else:
             self._migration_mode = SchemaMigrationMode.SELECT_INSERT
         self.no_color = no_color
-        if executor:
-            self._executor = executor
-        else:
-            self._executor = ThreadPoolExecutor(max_workers=parallelism)
+        self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._executor.shutdown()
 
     @property
     def dataset_reference(self):
@@ -283,7 +286,7 @@ class TableAction(object):
     def add(self, source, target, prefix='  ', fg='yellow'):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
-        fs = [self._executor.submit(self._add, table, prefix, fg) for table in tables]
+        fs = [self._executor.submit(self._add, t, prefix, fg) for t in tables]
         as_completed(fs)
         return count
 

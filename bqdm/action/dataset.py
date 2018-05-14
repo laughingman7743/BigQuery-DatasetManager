@@ -22,19 +22,22 @@ _logger.setLevel(logging.INFO)
 
 class DatasetAction(object):
 
-    def __init__(self, project=None, credential_file=None, no_color=False, executor=None,
+    def __init__(self, project=None, credential_file=None, no_color=False,
                  parallelism=get_parallelism(), debug=False):
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self._client = bigquery.Client(project, credentials)
         self.no_color = no_color
-        if executor:
-            self._executor = executor
-        else:
-            self._executor = ThreadPoolExecutor(max_workers=parallelism)
+        self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._executor.shutdown()
 
     @staticmethod
     def get_add_datasets(source, target):
