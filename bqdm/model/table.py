@@ -54,9 +54,9 @@ class BigQueryTable(object):
             description=table.description,
             expires=table.expires,
             partitioning_type=table.partitioning_type,
-            view_use_legacy_sql=table.view_use_legacy_sql,
-            view_query=table.view_query,
-            schema=schema,
+            view_use_legacy_sql=table.view_use_legacy_sql if table.view_query else None,
+            view_query=table.view_query if table.view_query else None,
+            schema=None if table.view_query else schema,
             labels=table.labels)
 
     @staticmethod
@@ -65,7 +65,7 @@ class BigQueryTable(object):
         if schema:
             schema = tuple(BigQuerySchemaField.to_schema_field(s) for s in schema)
         else:
-            schema = ()
+            schema = None
         table_ref = TableReference(dataset_ref, model.table_id)
         table = Table(table_ref, schema)
         table.friendly_name = model.friendly_name
@@ -90,8 +90,8 @@ class BigQueryTable(object):
                 ('expires', data.expires.strftime(
                     '%Y-%m-%dT%H:%M:%S.%f%z') if data.expires else data.expires),
                 ('partitioning_type', data.partitioning_type),
-                ('view_use_legacy_sql', data.view_use_legacy_sql),
-                ('view_query', data.view_query),
+                ('view_use_legacy_sql', data.view_use_legacy_sql if data.view_query else None),
+                ('view_query', data.view_query if data.view_query else None),
                 ('schema', data.schema),
                 ('labels', data.labels),
             )
