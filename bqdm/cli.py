@@ -152,7 +152,7 @@ def export(ctx, output_dir, dataset, exclude_dataset):
 @cli.command(help=msg.HELP_COMMAND_PLAN)
 @click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
-@click.option('--detailed_exitcode', is_flag=True, default=False,
+@click.option('--detailed-exitcode', is_flag=True, default=False,
               help=msg.HELP_OPTION_DETAILED_EXIT_CODE)
 @click.option('--dataset', '-d', type=str, required=False, multiple=True,
               help=msg.HELP_OPTION_DATASET)
