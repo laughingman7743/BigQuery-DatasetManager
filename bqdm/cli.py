@@ -196,6 +196,8 @@ def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 @cli.command(help=msg.HELP_COMMAND_APPLY)
 @click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
+@click.option('--auto-approve', is_flag=True, default=False,
+              help=msg.HELP_OPTION_AUTO_APPROVE)
 @click.option('--dataset', '-d', type=str, required=False, multiple=True,
               help=msg.HELP_OPTION_DATASET)
 @click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
@@ -213,6 +215,7 @@ def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
 def apply(ctx, conf_dir, dataset, exclude_dataset, mode, backup_dataset):
+    # TODO Impl auto-approve option
     add_counts, change_counts, destroy_counts = [], [], []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
         with DatasetAction(project=ctx.obj['project'],
@@ -292,12 +295,15 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 @destroy.command('apply', help=msg.HELP_COMMAND_APPLY_DESTROY)
 @click.argument('conf-dir', type=click.Path(exists=True, dir_okay=True), required=False,
                 default='.')
+@click.option('--auto-approve', is_flag=True, default=False,
+              help=msg.HELP_OPTION_AUTO_APPROVE)
 @click.option('--dataset', '-d', type=str, required=False, multiple=True,
               help=msg.HELP_OPTION_DATASET)
 @click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
               help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
 def apply_destroy(ctx, conf_dir, dataset, exclude_dataset):
+    # TODO Impl auto-approve option
     destroy_counts = []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
         with DatasetAction(project=ctx.obj['project'],

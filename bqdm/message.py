@@ -24,6 +24,7 @@ more granular information about what the resulting plan contains:
 0 = Succeeded with empty diff
 1 = Error
 2 = Succeeded with non-empty diff"""
+HELP_OPTION_AUTO_APPROVE = 'Skip interactive approval of plan before applying.'
 HELP_OPTION_MIGRATION_MODE = """Specify the migration mode when changing the schema.
 Choice from `select_insert`, `select_insert_backup`, `replace`, r`eplace_backup`,
 `drop_create`, `drop_create_backup`."""
