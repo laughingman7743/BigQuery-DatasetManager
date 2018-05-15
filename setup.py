@@ -3,7 +3,7 @@
 from __future__ import print_function
 import codecs
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import bqdm
 
@@ -22,7 +22,7 @@ setup(
     author='laughingman7743',
     author_email='laughingman7743@gmail.com',
     license='MIT License',
-    packages=['bqdm'],
+    packages=find_packages(),
     package_data={
         '': ['*.rst'],
     },
