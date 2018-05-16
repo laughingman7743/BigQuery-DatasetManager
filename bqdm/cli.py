@@ -214,7 +214,7 @@ def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 @click.option('--backup-dataset', '-b', type=str, required=False,
               help=msg.HELP_OPTION_BACKUP_DATASET)
 @click.pass_context
-def apply(ctx, conf_dir, dataset, exclude_dataset, mode, backup_dataset):
+def apply(ctx, conf_dir, auto_approve, dataset, exclude_dataset, mode, backup_dataset):
     # TODO Impl auto-approve option
     add_counts, change_counts, destroy_counts = [], [], []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
@@ -302,7 +302,7 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 @click.option('--exclude-dataset', '-e', type=str, required=False, multiple=True,
               help=msg.HELP_OPTION_EXCLUDE_DATASET)
 @click.pass_context
-def apply_destroy(ctx, conf_dir, dataset, exclude_dataset):
+def apply_destroy(ctx, conf_dir, auto_approve, dataset, exclude_dataset):
     # TODO Impl auto-approve option
     destroy_counts = []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
