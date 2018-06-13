@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from future.utils import iteritems
 from google.cloud import bigquery
+from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 from bqdm.model.dataset import BigQueryDataset
@@ -65,8 +66,12 @@ class DatasetAction(object):
 
     def get_dataset(self, dataset_id):
         dataset_ref = self._client.dataset(dataset_id)
-        dataset = self._client.get_dataset(dataset_ref)
-        echo('Load dataset: ' + dataset.path)
+        dataset = None
+        try:
+            dataset = self._client.get_dataset(dataset_ref)
+            echo('Load dataset: ' + dataset.path)
+        except NotFound:
+            _logger.info('Dataset {0} is not found.'.format(dataset_id))
         return dataset
 
     def list_datasets(self, include_datasets=(), exclude_datasets=()):
@@ -76,7 +81,8 @@ class DatasetAction(object):
         fs = [self._executor.submit(self.get_dataset, d)
               for d in set(include_datasets) - set(exclude_datasets)]
         for r in as_completed(fs):
-            datasets.append(BigQueryDataset.from_dataset(r))
+            if r:
+                datasets.append(BigQueryDataset.from_dataset(r))
         if datasets:
             echo('------------------------------------------------------------------------')
             echo()
