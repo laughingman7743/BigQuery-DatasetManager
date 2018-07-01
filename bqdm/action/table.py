@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
 
@@ -21,8 +20,7 @@ from google.oauth2 import service_account
 
 from bqdm.model.schema import BigQuerySchemaField
 from bqdm.model.table import BigQueryTable
-from bqdm.util import (as_completed, dump, echo, echo_dump,
-                       echo_ndiff, get_parallelism)
+from bqdm.util import (dump, echo, echo_dump, echo_ndiff)
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -41,9 +39,10 @@ class SchemaMigrationMode(Enum):
 
 class TableAction(object):
 
-    def __init__(self, dataset_id, migration_mode=None, backup_dataset_id=None, project=None,
-                 credential_file=None, no_color=False, parallelism=get_parallelism(),
-                 debug=False):
+    def __init__(self, executor, dataset_id,
+                 migration_mode=None, backup_dataset_id=None, project=None,
+                 credential_file=None, no_color=False, debug=False):
+        self._executor = executor
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
@@ -60,15 +59,8 @@ class TableAction(object):
         else:
             self._migration_mode = SchemaMigrationMode.SELECT_INSERT
         self.no_color = no_color
-        self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._executor.shutdown()
 
     @property
     def dataset_reference(self):
@@ -243,44 +235,49 @@ class TableAction(object):
 
     def get_table(self, table_id):
         table_ref = self.dataset.table(table_id)
-        table = self._client.get_table(table_ref)
-        echo('Load table: ' + table.path)
+        table = None
+        try:
+            table = self._client.get_table(table_ref)
+            echo('Load table: ' + table.path)
+            table = BigQueryTable.from_table(table)
+        except NotFound:
+            _logger.info('Table {0} is not found.'.format(table_id))
         return table
+
+    def _list_tables(self):
+        return self._client.list_tables(self.dataset)
 
     def list_tables(self):
         if not self.exists_dataset:
             return []
 
-        tables = []
         fs = [self._executor.submit(self.get_table, t.table_id)
               for t in self._client.list_tables(self.dataset)]
-        for r in as_completed(fs):
-            tables.append(BigQueryTable.from_table(r))
-        if tables:
-            echo('------------------------------------------------------------------------')
-            echo()
-        return tables
+        return fs
+
+    def _export(self, output_dir, table_id):
+        table = self.get_table(table_id)
+        data = dump(table)
+        _logger.debug(data)
+        export_path = os.path.join(output_dir, '{0}.yml'.format(table.table_id))
+        echo('Export table config: {0}'.format(export_path))
+        with codecs.open(export_path, 'wb', 'utf-8') as f:
+            f.write(data)
+        return table
 
     def export(self, output_dir):
         output_dir = os.path.join(output_dir, self._dataset_ref.dataset_id)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        tables = self.list_tables()
-        for table in tables:
-            data = dump(BigQueryTable.from_table(table))
-            _logger.debug(data)
-            export_path = os.path.join(output_dir, '{0}.yml'.format(table.table_id))
-            echo('Export table config: {0}'.format(export_path))
-            with codecs.open(export_path, 'wb', 'utf-8') as f:
-                f.write(data)
+        tables = self._list_tables()
+        fs = [self._executor.submit(self._export, output_dir, table.table_id)
+              for table in tables]
         if not tables:
             keep_file = os.path.join(output_dir, '.gitkeep')
             if not os.path.exists(keep_file):
                 open(keep_file, 'a').close()
-        else:
-            echo()
-        return tables
+        return fs
 
     def _add(self, model, prefix='  ', fg='green'):
         table = BigQueryTable.to_table(self._dataset_ref, model)
@@ -304,8 +301,7 @@ class TableAction(object):
         count, tables = self.get_add_tables(source, target)
         _logger.debug('Add tables: {0}'.format(tables))
         fs = [self._executor.submit(self._add, t, prefix, fg) for t in tables]
-        as_completed(fs)
-        return count
+        return count, fs
 
     def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
         table = BigQueryTable.to_table(self._dataset_ref, target_model)
@@ -359,8 +355,7 @@ class TableAction(object):
         fs = [self._executor.submit(
             self._change, next((s for s in source if s.table_id == t.table_id), None),
             t, prefix, fg) for t in tables]
-        as_completed(fs)
-        return count
+        return count, fs
 
     def _destroy(self, model, prefix='  ', fg='red'):
         table = BigQueryTable.to_table(self._dataset_ref, model)
@@ -382,5 +377,4 @@ class TableAction(object):
         count, tables = self.get_destroy_tables(source, target)
         _logger.debug('Destroy tables: {0}'.format(tables))
         fs = [self._executor.submit(self._destroy, t, prefix, fg) for t in tables]
-        as_completed(fs)
-        return count
+        return count, fs

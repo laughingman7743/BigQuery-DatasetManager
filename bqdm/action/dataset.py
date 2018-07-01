@@ -5,7 +5,6 @@ import codecs
 import logging
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
 
 from future.utils import iteritems
 from google.cloud import bigquery
@@ -13,8 +12,7 @@ from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 from bqdm.model.dataset import BigQueryDataset
-from bqdm.util import (as_completed, dump, echo, echo_dump,
-                       echo_ndiff, get_parallelism)
+from bqdm.util import (dump, echo, echo_dump, echo_ndiff)
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -23,22 +21,16 @@ _logger.setLevel(logging.INFO)
 
 class DatasetAction(object):
 
-    def __init__(self, project=None, credential_file=None, no_color=False,
-                 parallelism=get_parallelism(), debug=False):
+    def __init__(self, executor, project=None, credential_file=None,
+                 no_color=False, debug=False):
+        self._executor = executor
         credentials = None
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self._client = bigquery.Client(project, credentials)
         self.no_color = no_color
-        self._executor = ThreadPoolExecutor(max_workers=parallelism)
         if debug:
             _logger.setLevel(logging.DEBUG)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._executor.shutdown()
 
     @staticmethod
     def get_add_datasets(source, target):
@@ -70,38 +62,39 @@ class DatasetAction(object):
         try:
             dataset = self._client.get_dataset(dataset_ref)
             echo('Load dataset: ' + dataset.path)
+            dataset = BigQueryDataset.from_dataset(dataset)
         except NotFound:
             _logger.info('Dataset {0} is not found.'.format(dataset_id))
         return dataset
 
-    def list_datasets(self, include_datasets=(), exclude_datasets=()):
-        datasets = []
+    def _list_datasets(self, include_datasets=(), exclude_datasets=()):
         if not include_datasets:
             include_datasets = [d.dataset_id for d in self._client.list_datasets()]
+        return tuple(set(include_datasets) - set(exclude_datasets))
+
+    def list_datasets(self, include_datasets=(), exclude_datasets=()):
         fs = [self._executor.submit(self.get_dataset, d)
-              for d in set(include_datasets) - set(exclude_datasets)]
-        for r in as_completed(fs):
-            if r:
-                datasets.append(BigQueryDataset.from_dataset(r))
-        if datasets:
-            echo('------------------------------------------------------------------------')
-            echo()
-        return datasets
+              for d in self._list_datasets(include_datasets, exclude_datasets)]
+        return fs
 
-    def export(self, output_dir, include_datasets=(), exclude_datasets=()):
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        datasets = self.list_datasets(include_datasets, exclude_datasets)
-        for dataset in datasets:
-            data = dump(BigQueryDataset.from_dataset(dataset))
+    def _export(self, output_dir, dataset_id):
+        dataset = self.get_dataset(dataset_id)
+        if dataset:
+            data = dump(dataset)
             _logger.debug(data)
             export_path = os.path.join(output_dir, '{0}.yml'.format(dataset.dataset_id))
             echo('Export dataset config: {0}'.format(export_path))
             with codecs.open(export_path, 'wb', 'utf-8') as f:
                 f.write(data)
-        echo()
-        return datasets
+        return dataset
+
+    def export(self, output_dir, include_datasets=(), exclude_datasets=()):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        datasets = self._list_datasets(include_datasets, exclude_datasets)
+        fs = [self._executor.submit(self._export, output_dir, d)
+              for d in datasets]
+        return fs
 
     def _add(self, model, prefix='  ', fg='green'):
         dataset = BigQueryDataset.to_dataset(self._client.project, model)
@@ -128,8 +121,7 @@ class DatasetAction(object):
         count, datasets = self.get_add_datasets(source, target)
         _logger.debug('Add datasets: {0}'.format(datasets))
         fs = [self._executor.submit(self._add, d, prefix, fg) for d in datasets]
-        as_completed(fs)
-        return count
+        return count, fs
 
     def _change(self, source_model, target_model, prefix='  ', fg='yellow'):
         dataset = BigQueryDataset.to_dataset(self._client.project, target_model)
@@ -169,8 +161,7 @@ class DatasetAction(object):
         fs = [self._executor.submit(
             self._change, next((s for s in source if s.dataset_id == d.dataset_id), None),
             d, prefix, fg) for d in datasets]
-        as_completed(fs)
-        return count
+        return count, fs
 
     def _destroy(self, model, prefix='  ', fg='red'):
         datasetted = BigQueryDataset.to_dataset(self._client.project, model)
@@ -192,8 +183,7 @@ class DatasetAction(object):
         count, datasets = self.get_destroy_datasets(source, target)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         fs = [self._executor.submit(self._destroy, d) for d in datasets]
-        as_completed(fs)
-        return count
+        return count, fs
 
     def plan_intersection_destroy(self, source, target, prefix='  ', fg='red'):
         count, datasets = self.get_intersection_datasets(target, source)
@@ -208,5 +198,4 @@ class DatasetAction(object):
         count, datasets = self.get_intersection_datasets(target, source)
         _logger.debug('Destroy datasets: {0}'.format(datasets))
         fs = [self._executor.submit(self._destroy, d, prefix, fg) for d in datasets]
-        as_completed(fs)
-        return count
+        return count, fs

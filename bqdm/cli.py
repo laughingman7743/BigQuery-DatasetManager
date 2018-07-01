@@ -25,7 +25,6 @@ _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(sys.stdout))
 _logger.setLevel(logging.INFO)
 
-
 yaml.add_representer(str, str_representer)
 yaml.add_representer(unicode, str_representer)
 yaml.add_representer(tuple, tuple_representer)
@@ -33,76 +32,6 @@ yaml.add_representer(BigQueryDataset, BigQueryDataset.represent)
 yaml.add_representer(BigQueryAccessEntry, BigQueryAccessEntry.represent)
 yaml.add_representer(BigQueryTable, BigQueryTable.represent)
 yaml.add_representer(BigQuerySchemaField, BigQuerySchemaField.represent)
-
-
-def _export_table(ctx, dataset_id, output_dir):
-    with TableAction(dataset_id,
-                     project=ctx.obj['project'],
-                     credential_file=ctx.obj['credential_file'],
-                     no_color=not ctx.obj['color'],
-                     parallelism=ctx.obj['parallelism'],
-                     debug=ctx.obj['debug']) as action:
-        action.export(output_dir)
-
-
-def _plan_table(ctx, dataset_id, conf_dir):
-    target_tables = list_local_tables(conf_dir, dataset_id)
-    add_count, change_count, destroy_count = 0, 0, 0
-    if target_tables is not None:
-        with TableAction(dataset_id,
-                         project=ctx.obj['project'],
-                         credential_file=ctx.obj['credential_file'],
-                         no_color=not ctx.obj['color'],
-                         parallelism=ctx.obj['parallelism'],
-                         debug=ctx.obj['debug']) as action:
-            source_tables = action.list_tables()
-            add_count = action.plan_add(source_tables, target_tables)
-            change_count = action.plan_change(source_tables, target_tables)
-            destroy_count = action.plan_destroy(source_tables, target_tables)
-    return add_count, change_count, destroy_count
-
-
-def _apply_table(ctx, dataset_id, conf_dir, mode, backup_dataset):
-    target_tables = list_local_tables(conf_dir, dataset_id)
-    add_count, change_count, destroy_count = 0, 0, 0
-    if target_tables is not None:
-        with TableAction(dataset_id,
-                         migration_mode=mode,
-                         backup_dataset_id=backup_dataset,
-                         project=ctx.obj['project'],
-                         credential_file=ctx.obj['credential_file'],
-                         no_color=not ctx.obj['color'],
-                         parallelism=ctx.obj['parallelism'],
-                         debug=ctx.obj['debug']) as action:
-            source_tables = action.list_tables()
-            add_count = action.add(source_tables, target_tables)
-            change_count = action.change(source_tables, target_tables)
-            destroy_count = action.destroy(source_tables, target_tables)
-    return add_count, change_count, destroy_count
-
-
-def _plan_destroy_table(ctx, dataset_id):
-    with TableAction(dataset_id,
-                     project=ctx.obj['project'],
-                     credential_file=ctx.obj['credential_file'],
-                     no_color=not ctx.obj['color'],
-                     parallelism=ctx.obj['parallelism'],
-                     debug=ctx.obj['debug']) as action:
-        source_tables = action.list_tables()
-        count = action.plan_destroy(source_tables, [])
-    return count
-
-
-def _apply_destroy_table(ctx, dataset_id):
-    with TableAction(dataset_id,
-                     project=ctx.obj['project'],
-                     credential_file=ctx.obj['credential_file'],
-                     no_color=not ctx.obj['color'],
-                     parallelism=ctx.obj['parallelism'],
-                     debug=ctx.obj['debug']) as action:
-        source_tables = action.list_tables()
-        count = action.destroy(source_tables, [])
-    return count
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -138,14 +67,20 @@ def cli(ctx, credential_file, project, color, parallelism, debug):
 @click.pass_context
 def export(ctx, output_dir, dataset, exclude_dataset):
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
-        with DatasetAction(project=ctx.obj['project'],
-                           credential_file=ctx.obj['credential_file'],
-                           no_color=not ctx.obj['color'],
-                           parallelism=ctx.obj['parallelism'],
-                           debug=ctx.obj['debug']) as action:
-            datasets = action.export(output_dir, dataset, exclude_dataset)
+        action = DatasetAction(e, project=ctx.obj['project'],
+                               credential_file=ctx.obj['credential_file'],
+                               no_color=not ctx.obj['color'],
+                               debug=ctx.obj['debug'])
+        datasets = as_completed(action.export(output_dir, dataset, exclude_dataset))
 
-        fs = [e.submit(_export_table, ctx, d.dataset_id, output_dir) for d in datasets]
+        fs = []
+        for d in datasets:
+            action = TableAction(e, d.dataset_id,
+                                 project=ctx.obj['project'],
+                                 credential_file=ctx.obj['credential_file'],
+                                 no_color=not ctx.obj['color'],
+                                 debug=ctx.obj['debug'])
+            fs.extend(action.export(output_dir))
         as_completed(fs)
 
 
@@ -164,23 +99,36 @@ def plan(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 
     add_counts, change_counts, destroy_counts = [], [], []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
-        with DatasetAction(project=ctx.obj['project'],
-                           credential_file=ctx.obj['credential_file'],
-                           no_color=not ctx.obj['color'],
-                           parallelism=ctx.obj['parallelism'],
-                           debug=ctx.obj['debug']) as action:
-            source_datasets = action.list_datasets(dataset, exclude_dataset)
-            target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        dataset_action = DatasetAction(e, project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+        source_datasets = [d for d in as_completed(dataset_action.list_datasets(
+            dataset, exclude_dataset)) if d]
+        target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        echo('------------------------------------------------------------------------')
+        echo()
 
-            add_counts.append(action.plan_add(source_datasets, target_datasets))
-            change_counts.append(action.plan_change(source_datasets, target_datasets))
-            destroy_counts.append(action.plan_destroy(source_datasets, target_datasets))
+        add_counts.append(dataset_action.plan_add(source_datasets, target_datasets))
+        change_counts.append(dataset_action.plan_change(source_datasets, target_datasets))
+        destroy_counts.append(dataset_action.plan_destroy(source_datasets, target_datasets))
 
-        fs = [e.submit(_plan_table, ctx, d.dataset_id, conf_dir) for d in target_datasets]
-        for add_count, change_count, destroy_count in as_completed(fs):
-            add_counts.append(add_count)
-            change_counts.append(change_count)
-            destroy_counts.append(destroy_count)
+        for d in target_datasets:
+            target_tables = list_local_tables(conf_dir, d.dataset_id)
+            if target_tables is None:
+                continue
+            table_action = TableAction(e, d.dataset_id,
+                                       project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+            source_tables = [t for t in as_completed(table_action.list_tables()) if t]
+            if target_tables or source_tables:
+                echo('------------------------------------------------------------------------')
+                echo()
+                add_counts.append(table_action.plan_add(source_tables, target_tables))
+                change_counts.append(table_action.plan_change(source_tables, target_tables))
+                destroy_counts.append(table_action.plan_destroy(source_tables, target_tables))
 
     if not any(chain.from_iterable([add_counts, change_counts, destroy_counts])):
         echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
@@ -218,24 +166,54 @@ def apply(ctx, conf_dir, auto_approve, dataset, exclude_dataset, mode, backup_da
     # TODO Impl auto-approve option
     add_counts, change_counts, destroy_counts = [], [], []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
-        with DatasetAction(project=ctx.obj['project'],
-                           credential_file=ctx.obj['credential_file'],
-                           no_color=not ctx.obj['color'],
-                           parallelism=ctx.obj['parallelism'],
-                           debug=ctx.obj['debug']) as action:
-            source_datasets = action.list_datasets(dataset, exclude_dataset)
-            target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        dataset_action = DatasetAction(e, project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+        source_datasets = [d for d in as_completed(dataset_action.list_datasets(
+            dataset, exclude_dataset)) if d]
+        target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        echo('------------------------------------------------------------------------')
+        echo()
 
-            add_counts.append(action.add(source_datasets, target_datasets))
-            change_counts.append(action.change(source_datasets, target_datasets))
-            destroy_counts.append(action.destroy(source_datasets, target_datasets))
+        fs = []
+        add_count, add_fs = dataset_action.add(source_datasets, target_datasets)
+        add_counts.append(add_count)
+        fs.extend(add_fs)
+        change_count, change_fs = dataset_action.change(source_datasets, target_datasets)
+        change_counts.append(change_count)
+        fs.extend(change_fs)
+        destroy_count, destroy_fs = dataset_action.destroy(source_datasets, target_datasets)
+        destroy_counts.append(destroy_count)
+        fs.extend(destroy_fs)
+        as_completed(fs)
 
-        fs = [e.submit(_apply_table, ctx, d.dataset_id, conf_dir, mode, backup_dataset)
-              for d in target_datasets]
-        for add_count, change_count, destroy_count in as_completed(fs):
-            add_counts.append(add_count)
-            change_counts.append(change_count)
-            destroy_counts.append(destroy_count)
+        fs = []
+        for d in target_datasets:
+            target_tables = list_local_tables(conf_dir, d.dataset_id)
+            if target_tables is None:
+                continue
+            table_action = TableAction(e, d.dataset_id,
+                                       migration_mode=mode,
+                                       backup_dataset_id=backup_dataset,
+                                       project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+            source_tables = [t for t in as_completed(table_action.list_tables()) if t]
+            if target_tables or source_tables:
+                echo('------------------------------------------------------------------------')
+                echo()
+                add_count, add_fs = table_action.add(source_tables, target_tables)
+                add_counts.append(add_count)
+                fs.extend(add_fs)
+                change_count, change_fs = table_action.change(source_tables, target_tables)
+                change_counts.append(change_count)
+                fs.extend(change_fs)
+                destroy_count, destroy_fs = table_action.destroy(source_tables, target_tables)
+                destroy_counts.append(destroy_count)
+                fs.extend(destroy_fs)
+        as_completed(fs)
 
     if not any(chain.from_iterable([add_counts, change_counts, destroy_counts])):
         echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
@@ -267,20 +245,30 @@ def plan_destroy(ctx, conf_dir, detailed_exitcode, dataset, exclude_dataset):
 
     destroy_counts = []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
-        with DatasetAction(project=ctx.obj['project'],
-                           credential_file=ctx.obj['credential_file'],
-                           no_color=not ctx.obj['color'],
-                           parallelism=ctx.obj['parallelism'],
-                           debug=ctx.obj['debug']) as action:
-            source_datasets = action.list_datasets(dataset, exclude_dataset)
-            target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        dataset_action = DatasetAction(e, project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+        source_datasets = [d for d in as_completed(dataset_action.list_datasets(
+            dataset, exclude_dataset)) if d]
+        target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        echo('------------------------------------------------------------------------')
+        echo()
 
-            destroy_counts.append(action.plan_intersection_destroy(
-                source_datasets, target_datasets))
+        destroy_counts.append(dataset_action.plan_intersection_destroy(
+            source_datasets, target_datasets))
 
-        fs = [e.submit(_plan_destroy_table, ctx, d.dataset_id) for d in target_datasets]
-        for r in as_completed(fs):
-            destroy_counts.append(r)
+        for d in target_datasets:
+            table_action = TableAction(e, d.dataset_id,
+                                       project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+            source_tables = [t for t in as_completed(table_action.list_tables()) if t]
+            if source_tables:
+                echo('------------------------------------------------------------------------')
+                echo()
+                destroy_counts.append(table_action.plan_destroy(source_tables, []))
 
     if not any(destroy_counts):
         echo(msg.MESSAGE_SUMMARY_NO_CHANGE)
@@ -306,20 +294,38 @@ def apply_destroy(ctx, conf_dir, auto_approve, dataset, exclude_dataset):
     # TODO Impl auto-approve option
     destroy_counts = []
     with ThreadPoolExecutor(max_workers=ctx.obj['parallelism']) as e:
-        with DatasetAction(project=ctx.obj['project'],
-                           credential_file=ctx.obj['credential_file'],
-                           no_color=not ctx.obj['color'],
-                           parallelism=ctx.obj['parallelism'],
-                           debug=ctx.obj['debug']) as action:
-            source_datasets = action.list_datasets(dataset, exclude_dataset)
-            target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        dataset_action = DatasetAction(e, project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+        source_datasets = [d for d in as_completed(dataset_action.list_datasets(
+            dataset, exclude_dataset)) if d]
+        target_datasets = list_local_datasets(conf_dir, dataset, exclude_dataset)
+        echo('------------------------------------------------------------------------')
+        echo()
 
-            fs = [e.submit(_apply_destroy_table, ctx, d.dataset_id) for d in target_datasets]
-            for r in as_completed(fs):
-                destroy_counts.append(r)
+        fs = []
+        for d in target_datasets:
+            table_action = TableAction(e, d.dataset_id,
+                                       project=ctx.obj['project'],
+                                       credential_file=ctx.obj['credential_file'],
+                                       no_color=not ctx.obj['color'],
+                                       debug=ctx.obj['debug'])
+            source_tables = [t for t in as_completed(table_action.list_tables()) if t]
+            if source_tables:
+                echo('------------------------------------------------------------------------')
+                echo()
+                destroy_count, destroy_fs = table_action.destroy(source_tables, [])
+                destroy_counts.append(destroy_count)
+                fs.extend(destroy_fs)
+        as_completed(fs)
 
-            destroy_counts.append(action.intersection_destroy(
-                source_datasets, target_datasets))
+        fs = []
+        destroy_count, destroy_fs = dataset_action.intersection_destroy(
+            source_datasets, target_datasets)
+        destroy_counts.append(destroy_count)
+        fs.extend(destroy_fs)
+        as_completed(fs)
 
     if not any(destroy_counts):
         echo(msg.MESSAGE_SUMMARY_NO_CHANGE)

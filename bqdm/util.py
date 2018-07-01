@@ -25,7 +25,7 @@ def get_parallelism():
 
 
 def as_completed(fs):
-    return (f.result() for f in futures.as_completed(fs))
+    return tuple(f.result() for f in futures.as_completed(fs))
 
 
 def str_representer(dumper, data):
@@ -79,9 +79,6 @@ def list_local_datasets(conf_dir, include_datasets=(), exclude_datasets=()):
         else:
             if dataset_id in include_datasets and dataset_id not in exclude_datasets:
                 datasets.append(load_dataset(conf))
-    if datasets:
-        echo('------------------------------------------------------------------------')
-        echo()
     return datasets
 
 
@@ -103,9 +100,6 @@ def list_local_tables(conf_dir, dataset_id):
     confs = glob.glob(os.path.join(conf_dir, '*.yml'))
     for conf in confs:
         tables.append(load_table(conf))
-    if tables:
-        echo('------------------------------------------------------------------------')
-        echo()
     return tables
 
 
