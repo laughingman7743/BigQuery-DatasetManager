@@ -26,7 +26,7 @@ more granular information about what the resulting plan contains:
 2 = Succeeded with non-empty diff"""
 HELP_OPTION_AUTO_APPROVE = 'Skip interactive approval of plan before applying.'
 HELP_OPTION_MIGRATION_MODE = """Specify the migration mode when changing the schema.
-Choice from `select_insert`, `select_insert_backup`, `replace`, r`eplace_backup`,
+Choice from `select_insert`, `select_insert_backup`, `replace`, `replace_backup`,
 `drop_create`, `drop_create_backup`."""
 HELP_OPTION_DATASET = 'Specify the ID of the dataset to manage.'
 HELP_OPTION_BACKUP_DATASET = 'Specify the ID of the dataset to store the backup at migration'
