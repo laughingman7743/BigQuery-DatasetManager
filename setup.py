@@ -32,6 +32,7 @@ setup(
         'click>=6.0',
         'PyYAML>=3.12',
         'google-cloud-bigquery==1.1.0',
+        'google-api-python-client>=1.7.0',
         'enum34;python_version<="3.3"',
         'python-dateutil>=2.7.0',
     ],

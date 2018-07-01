@@ -79,6 +79,17 @@ class BigQueryTable(object):
         table.labels = model.labels if model.labels is not None else dict()
         return table
 
+    def schema_dict(self):
+        return {
+            'fields': [s.dict() for s in self.schema]
+        }
+
+    def schema_exclude_description(self):
+        schema = None
+        if self.schema:
+            schema = tuple(s.exclude_description() for s in self.schema)
+        return schema
+
     @staticmethod
     def represent(dumper, data):
         return dumper.represent_mapping(
