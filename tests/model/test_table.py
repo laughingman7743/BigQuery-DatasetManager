@@ -614,3 +614,6 @@ class TestBigQueryTable(unittest.TestCase):
             }
         ))
         self.assertNotEqual(expected_table5.labels, actual_table5_2.labels)
+
+    # TODO test_schema_dict
+    # TODO test_exclude_description

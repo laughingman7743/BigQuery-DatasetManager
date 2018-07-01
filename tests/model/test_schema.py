@@ -217,6 +217,9 @@ class TestBigQuerySchemaField(unittest.TestCase):
         actual_schema_field2_2 = BigQuerySchemaField.to_schema_field(schema_field2_2)
         self.assertNotEqual(expected_schema_field2, actual_schema_field2_2)
 
+    # TODO test_dict
+    # TODO test_exclude_description
+
     def test_normalize_field_type(self):
         self.assertEqual('INT64', BigQuerySchemaField.normalize_field_type('INTEGER'))
         self.assertEqual('INT64', BigQuerySchemaField.normalize_field_type('INT64'))
