@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
 
+import googleapiclient.discovery
 from future.utils import iteritems
 from google.cloud import bigquery
 from google.cloud.bigquery.job import (CopyJobConfig, CreateDisposition, QueryJobConfig,
@@ -47,6 +48,8 @@ class TableAction(object):
         if credential_file:
             credentials = service_account.Credentials.from_service_account_file(credential_file)
         self._client = bigquery.Client(project, credentials)
+        self._api_client = googleapiclient.discovery.build('bigquery', 'v2',
+                                                           credentials=credentials)
         self._dataset_ref = self._client.dataset(dataset_id)
         if backup_dataset_id:
             self._backup_dataset_ref = self._client.dataset(backup_dataset_id)
@@ -217,6 +220,17 @@ class TableAction(object):
                     query_fields.append('null AS {alias}'.format(alias=target.name))
         return ', '.join(query_fields)
 
+    def update_schema_description(self, target_table):
+        request = self._api_client.tables().patch(
+            projectId=self._client.project,
+            datasetId=self.dataset.dataset_id,
+            tableId=target_table.table_id,
+            body={
+                'schema': target_table.schema_dict()
+            }
+        )
+        request.execute()
+
     def create_temporary_table(self, model):
         tmp_table_model = copy.deepcopy(model)
         tmp_table_id = str(uuid.uuid4()).replace('-', '_')
@@ -310,9 +324,14 @@ class TableAction(object):
                 SchemaMigrationMode.SELECT_INSERT,
                 SchemaMigrationMode.SELECT_INSERT_BACKUP],\
                 'Migration mode: `{0}` not supported.'.format(self._migration_mode.value)
-        if target_model.schema != source_model.schema or \
+        target_schema_exclude_description = target_model.schema_exclude_description()
+        source_schema_exclude_description = source_model.schema_exclude_description()
+        if target_schema_exclude_description != source_schema_exclude_description or \
                 target_model.partitioning_type != source_model.partitioning_type:
             self.migrate(source_model, target_model)
+        if target_schema_exclude_description == source_schema_exclude_description and \
+                target_model.schema != source_model.schema:
+            self.update_schema_description(target_model)
         self._client.update_table(table, [
             'friendly_name',
             'description',

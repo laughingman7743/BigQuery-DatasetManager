@@ -3,16 +3,13 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
 "e1839a8" = {path = ".", editable = true}
-
 
 [dev-packages]
 tox = "*"
 twine = "*"
 wheel = "*"
-
 pytest = ">=3.5"
 pytest-cov = "*"
 pytest-flake8 = ">=1.0.1"

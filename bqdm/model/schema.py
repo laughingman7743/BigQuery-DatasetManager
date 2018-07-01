@@ -51,6 +51,23 @@ class BigQuerySchemaField(object):
             description=model.description,
             fields=fields)
 
+    def dict(self):
+        schema = {
+            'name': self.name,
+            'type': self.field_type,
+            'mode': self.mode,
+            'description': self.description
+        }
+        if self.fields:
+            schema.update({'fields': [f.dict() for f in self.fields]})
+        return schema
+
+    def exclude_description(self):
+        fields = self.fields
+        if fields:
+            fields = tuple(f.exclude_description() for f in fields)
+        return BigQuerySchemaField(self.name, self.field_type, self.mode, fields=fields)
+
     @staticmethod
     def represent(dumper, data):
         return dumper.represent_mapping(
