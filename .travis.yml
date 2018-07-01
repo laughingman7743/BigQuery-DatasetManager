@@ -13,7 +13,7 @@ matrix:
     - python: 3.6
       env: TOXENV=py36
 install:
-  - "pip install tox codecov"
+  - pip install tox codecov
 before_script:
   - echo ${GOOGLE_APPLICATION_CREDENTIALS} | base64 -d > credential.json
   - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/credential.json
