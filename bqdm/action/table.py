@@ -133,7 +133,8 @@ class TableAction(object):
             self.select_insert(source_table.table_id, tmp_table.table_id, query_field)
             self._destroy(target_table, prefix, fg)
             self._add(target_table, prefix, fg)
-            self.select_insert(tmp_table.table_id, target_table.table_id, '*')
+            query_field = TableAction.build_query_field(target_table.schema, target_table.schema)
+            self.select_insert(tmp_table.table_id, target_table.table_id, query_field)
             self._destroy(tmp_table, prefix, fg)
         elif self._migration_mode in [SchemaMigrationMode.DROP_CREATE,
                                       SchemaMigrationMode.DROP_CREATE_BACKUP]:
